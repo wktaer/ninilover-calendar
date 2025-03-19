@@ -1,6 +1,6 @@
 // Import Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -26,57 +26,65 @@ const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
 // Auth functions
-async function handleAuth() {
-    try {
-        console.log("Intentando iniciar sesión...");
-        const result = await signInWithPopup(auth, provider);
-        console.log("Inicio de sesión exitoso:", result.user.displayName);
-        return result.user;
-    } catch (error) {
-        console.error("Error completo:", error);
-        
-        let errorMessage = "Error al iniciar sesión";
-        if (error.code === 'auth/popup-blocked') {
-            errorMessage = 'Por favor permite las ventanas emergentes para iniciar sesión';
-        } else if (error.code === 'auth/popup-closed-by-user') {
-            errorMessage = 'Ventana de inicio de sesión cerrada';
-        } else if (error.code === 'auth/unauthorized-domain') {
-            errorMessage = 'Este dominio no está autorizado. Por favor contacta al administrador.';
-        } else if (error.code === 'auth/cancelled-popup-request') {
-            errorMessage = 'Solicitud de inicio de sesión cancelada';
-        } else if (error.code === 'auth/network-request-failed') {
-            errorMessage = 'Error de red. Por favor verifica tu conexión';
-        } else if (error.code === 'auth/api-key-not-valid') {
-            errorMessage = 'Error de configuración. Por favor contacta al administrador.';
-            console.log("API Key utilizada:", firebaseConfig.apiKey);
+window.handleAuth = () => {
+    console.log('Iniciando proceso de autenticación...');
+    signInWithRedirect(auth, provider)
+        .catch((error) => {
+            console.error('Error de autenticación:', error);
+            let errorMessage = 'Error al iniciar sesión: ' + error.message;
+            if (error.code === 'auth/unauthorized-domain') {
+                errorMessage = 'Este dominio no está autorizado. Por favor, verifica la configuración en la consola de Firebase.';
+            }
+            alert(errorMessage);
+        });
+};
+
+window.handleSignOut = () => {
+    auth.signOut()
+        .then(() => {
+            console.log('Usuario cerró sesión exitosamente');
+        })
+        .catch((error) => {
+            console.error('Error al cerrar sesión:', error);
+            alert('Error al cerrar sesión: ' + error.message);
+        });
+};
+
+// Verificar resultado de redirección
+getRedirectResult(auth)
+    .then((result) => {
+        if (result && result.user) {
+            console.log('Usuario autenticado:', result.user);
         }
-        
-        alert(errorMessage);
-        console.error("Código de error:", error.code);
-        console.error("Mensaje de error:", error.message);
-    }
-}
+    })
+    .catch((error) => {
+        console.error('Error en redirección:', error);
+    });
 
-async function handleSignOut() {
-    try {
-        await auth.signOut();
-        console.log("Sesión cerrada exitosamente");
-    } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        alert('Error al cerrar sesión: ' + error.message);
+// Observar cambios en la autenticación
+onAuthStateChanged(auth, (user) => {
+    const loginBtn = document.getElementById('loginBtn');
+    if (user) {
+        console.log('Usuario conectado:', {
+            displayName: user.displayName,
+            email: user.email,
+            uid: user.uid
+        });
+        loginBtn.textContent = 'Cerrar Sesión';
+        loginBtn.onclick = handleSignOut;
+        document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+    } else {
+        console.log('Usuario no conectado');
+        loginBtn.textContent = 'Iniciar Sesión';
+        loginBtn.onclick = handleAuth;
+        document.getElementById('userInfo').textContent = '';
     }
-}
-
-// Make functions globally available
-window.handleAuth = handleAuth;
-window.handleSignOut = handleSignOut;
+});
 
 // Export everything needed
 export {
     auth,
     database,
     storage,
-    handleAuth,
-    handleSignOut,
     onAuthStateChanged
 };
