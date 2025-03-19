@@ -9,6 +9,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <script>
         // Firebase configuration
@@ -26,23 +27,10 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-
-        // Función para manejar el inicio de sesión con email
-        window.loginWithEmail = () => {
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
-            
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    document.getElementById('loginModal').style.display = 'none';
-                })
-                .catch((error) => {
-                    alert('Error: ' + error.message);
-                });
-        };
+        const database = firebase.database();
 
         // Función para registrar con email
-        window.registerWithEmail = () => {
+        window.registerWithEmail = async () => {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
             
@@ -55,99 +43,73 @@
                 alert('La contraseña debe tener al menos 6 caracteres');
                 return;
             }
-            
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    document.getElementById('loginModal').style.display = 'none';
-                    loadUserData(); // Cargar datos del usuario después del registro
-                })
-                .catch((error) => {
-                    let errorMessage = 'Error al registrar: ';
-                    switch (error.code) {
-                        case 'auth/invalid-email':
-                            errorMessage += 'El correo electrónico no es válido';
-                            break;
-                        case 'auth/email-already-in-use':
-                            errorMessage += 'Este correo ya está registrado';
-                            break;
-                        default:
-                            errorMessage += error.message;
-                    }
-                    alert(errorMessage);
-                });
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                document.getElementById('loginModal').style.display = 'none';
+                console.log('Usuario registrado exitosamente:', userCredential.user.email);
+            } catch (error) {
+                console.error('Error de registro:', error);
+                let message = 'Error al registrar: ';
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        message = 'El correo electrónico no es válido';
+                        break;
+                    case 'auth/email-already-in-use':
+                        message = 'Este correo ya está registrado';
+                        break;
+                    default:
+                        message = error.message;
+                }
+                alert(message);
+            }
         };
 
-        // Función para autenticación con teléfono
-        window.requestOTP = () => {
-            const phoneNumber = document.getElementById('phoneInput').value.trim();
+        // Función para iniciar sesión con email
+        window.loginWithEmail = async () => {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
             
-            if (!phoneNumber) {
-                alert('Por favor, ingresa un número de teléfono');
+            if (!email || !password) {
+                alert('Por favor, completa todos los campos');
                 return;
             }
 
-            if (!phoneNumber.startsWith('+')) {
-                alert('El número debe incluir el código de país (ejemplo: +56912345678)');
-                return;
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                document.getElementById('loginModal').style.display = 'none';
+                console.log('Inicio de sesión exitoso');
+            } catch (error) {
+                console.error('Error de inicio de sesión:', error);
+                let message = 'Error al iniciar sesión: ';
+                switch (error.code) {
+                    case 'auth/wrong-password':
+                        message = 'Contraseña incorrecta';
+                        break;
+                    case 'auth/user-not-found':
+                        message = 'Usuario no encontrado';
+                        break;
+                    case 'auth/invalid-email':
+                        message = 'Correo electrónico no válido';
+                        break;
+                    default:
+                        message = error.message;
+                }
+                alert(message);
             }
-            
-            if (!window.recaptchaVerifier) {
-                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                    'size': 'invisible'
-                });
-            }
-            
-            auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
-                .then((confirmationResult) => {
-                    window.confirmationResult = confirmationResult;
-                    document.getElementById('otpDiv').style.display = 'block';
-                })
-                .catch((error) => {
-                    let errorMessage = 'Error: ';
-                    switch (error.code) {
-                        case 'auth/invalid-phone-number':
-                            errorMessage += 'Número de teléfono inválido';
-                            break;
-                        default:
-                            errorMessage += error.message;
-                    }
-                    alert(errorMessage);
-                });
-        };
-
-        window.verifyOTP = () => {
-            const code = document.getElementById('otpInput').value;
-            
-            window.confirmationResult.confirm(code)
-                .then(() => {
-                    document.getElementById('loginModal').style.display = 'none';
-                })
-                .catch(() => {
-                    alert('Código inválido');
-                });
-        };
-
-        // Funciones UI
-        window.showEmailLogin = () => {
-            document.getElementById('emailLoginForm').style.display = 'block';
-            document.getElementById('phoneLoginForm').style.display = 'none';
-        };
-
-        window.showPhoneLogin = () => {
-            document.getElementById('phoneLoginForm').style.display = 'block';
-            document.getElementById('emailLoginForm').style.display = 'none';
         };
 
         // Función para manejar el inicio de sesión
         window.handleAuth = () => {
             document.getElementById('loginModal').style.display = 'block';
+            document.getElementById('emailLoginForm').style.display = 'block';
         };
 
         // Función para manejar el cierre de sesión
         window.handleSignOut = () => {
             auth.signOut()
                 .then(() => {
-                    console.log('Usuario cerró sesión exitosamente');
+                    console.log('Sesión cerrada exitosamente');
                 })
                 .catch((error) => {
                     console.error('Error al cerrar sesión:', error);
@@ -155,30 +117,14 @@
                 });
         };
 
-        // Función para cargar datos del usuario
-        function loadUserData() {
-            const user = auth.currentUser;
-            if (user) {
-                // Cargar calendario y otros datos
-                loadCalendarEvents();
-                loadMemories();
-                loadLetters();
-            }
-        }
-
         // Observar cambios en la autenticación
         auth.onAuthStateChanged((user) => {
             const loginBtn = document.getElementById('loginBtn');
             if (user) {
-                console.log('Usuario conectado:', {
-                    displayName: user.displayName || user.email || user.phoneNumber,
-                    email: user.email,
-                    uid: user.uid
-                });
+                console.log('Usuario conectado:', user.email);
                 loginBtn.textContent = 'Cerrar Sesión';
                 loginBtn.onclick = handleSignOut;
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName || user.email || user.phoneNumber}! 💖`;
-                loadUserData(); // Cargar datos cuando el usuario inicia sesión
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.email}! 💖`;
             } else {
                 console.log('Usuario no conectado');
                 loginBtn.textContent = 'Iniciar Sesión';
@@ -511,6 +457,67 @@
         }
 
         setInterval(createFloatingHearts, 300);
+
+        // Funciones UI
+        window.showEmailLogin = () => {
+            document.getElementById('emailLoginForm').style.display = 'block';
+            document.getElementById('phoneLoginForm').style.display = 'none';
+        };
+
+        window.showPhoneLogin = () => {
+            document.getElementById('phoneLoginForm').style.display = 'block';
+            document.getElementById('emailLoginForm').style.display = 'none';
+        };
+
+        // Función para autenticación con teléfono
+        window.requestOTP = () => {
+            const phoneNumber = document.getElementById('phoneInput').value.trim();
+            
+            if (!phoneNumber) {
+                alert('Por favor, ingresa un número de teléfono');
+                return;
+            }
+
+            if (!phoneNumber.startsWith('+')) {
+                alert('El número debe incluir el código de país (ejemplo: +56912345678)');
+                return;
+            }
+            
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    'size': 'invisible'
+                });
+            }
+            
+            auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+                .then((confirmationResult) => {
+                    window.confirmationResult = confirmationResult;
+                    document.getElementById('otpDiv').style.display = 'block';
+                })
+                .catch((error) => {
+                    let errorMessage = 'Error: ';
+                    switch (error.code) {
+                        case 'auth/invalid-phone-number':
+                            errorMessage += 'Número de teléfono inválido';
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    alert(errorMessage);
+                });
+        };
+
+        window.verifyOTP = () => {
+            const code = document.getElementById('otpInput').value;
+            
+            window.confirmationResult.confirm(code)
+                .then(() => {
+                    document.getElementById('loginModal').style.display = 'none';
+                })
+                .catch(() => {
+                    alert('Código inválido');
+                });
+        };
     </script>
 </body>
 </html>
