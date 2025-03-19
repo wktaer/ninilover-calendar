@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Firebase Config -->
+    <script src="js/firebase-config.js"></script>
     
     <style>
         :root {
@@ -168,7 +171,7 @@
     <div class="floating-hearts" id="hearts-container"></div>
     
     <header class="header">
-        <img src="https://i.gifer.com/7V0.gif" alt="Hello Kitty" class="logo">
+        <img src="https://clipart-library.com/images/8TxrBGEac.png" alt="Hello Kitty" class="logo">
         <div class="clock" id="clock">00:00:00</div>
         <div id="userInfo"></div>
         <button id="loginBtn" onclick="handleAuth()">Iniciar Sesión</button>
@@ -207,20 +210,6 @@
     </div>
 
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
-            authDomain: "ninilover-calendar.firebaseapp.com",
-            databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
-            projectId: "ninilover-calendar",
-            storageBucket: "ninilover-calendar.appspot.com",
-            messagingSenderId: "1063597046269",
-            appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         let currentUser = null;
 
         // Actualizar reloj
@@ -248,16 +237,7 @@
         }
         updateDailyMessage();
 
-        // Autenticación
-        function handleAuth() {
-            if (currentUser) {
-                auth.signOut();
-            } else {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(provider);
-            }
-        }
-
+        // Auth state observer
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;

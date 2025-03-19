@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NiniLover - Calendario 💖</title>
+    <title>NiniLover - Calendario 📅</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v9 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Firebase Config -->
+    <script src="js/firebase-config.js"></script>
     
     <style>
         :root {
@@ -275,35 +278,10 @@
     </div>
 
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
-            authDomain: "ninilover-calendar.firebaseapp.com",
-            databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
-            projectId: "ninilover-calendar",
-            storageBucket: "ninilover-calendar.appspot.com",
-            messagingSenderId: "1063597046269",
-            appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
         let currentUser = null;
-
-        // Calendar variables
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
-        let selectedDay = null;
-
-        const months = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        ];
-
-        const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let selectedDate = null;
 
         // Auth state observer
         auth.onAuthStateChanged((user) => {
@@ -363,9 +341,9 @@
                 const dateCell = document.createElement('div');
                 dateCell.className = 'date-cell';
                 
-                if (day === currentDate.getDate() && 
-                    currentMonth === currentDate.getMonth() && 
-                    currentYear === currentDate.getFullYear()) {
+                if (day === new Date().getDate() && 
+                    currentMonth === new Date().getMonth() && 
+                    currentYear === new Date().getFullYear()) {
                     dateCell.classList.add('today');
                 }
 
@@ -406,7 +384,7 @@
                 return;
             }
 
-            selectedDay = day;
+            selectedDate = day;
             const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
             const modal = document.getElementById('noteModal');
             const notesDisplay = document.getElementById('notesDisplay');
@@ -438,7 +416,7 @@
 
         function closeNoteModal() {
             document.getElementById('noteModal').style.display = 'none';
-            const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDay}`;
+            const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDate}`;
             const notesRef = database.ref(`notes/${dateKey}`);
             notesRef.off();
         }
@@ -450,7 +428,7 @@
             const content = noteInput.value.trim();
             
             if (content) {
-                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDay}`;
+                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDate}`;
                 const noteData = {
                     content: content,
                     authorName: currentUser.displayName,
