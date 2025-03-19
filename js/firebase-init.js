@@ -7,7 +7,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'http
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBKHKFIxgvDvRJxBBIVUaJ7OFtFnAcxYZc",
-    authDomain: "ninilover-calendar.firebaseapp.com",
+    authDomain: "ninilover-calendar.web.app",
     databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
@@ -18,29 +18,24 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+auth.useDeviceLanguage();
+
+// Configurar base de datos y almacenamiento
 const database = getDatabase(app);
 const storage = getStorage(app);
 
 // Configurar autenticación
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({
-    prompt: 'select_account'
-});
 
 // Función de autenticación
 async function handleAuth() {
     try {
-        console.log("Iniciando autenticación...");
         const result = await signInWithPopup(auth, provider);
         console.log("Autenticación exitosa:", result.user.displayName);
         return result.user;
     } catch (error) {
         console.error('Error de autenticación:', error);
-        if (error.code === 'auth/unauthorized-domain') {
-            alert('Este dominio no está autorizado. Por favor, agrega https://wktaer.github.io a los dominios autorizados en Firebase.');
-        } else {
-            alert('Error al iniciar sesión: ' + error.message);
-        }
+        alert('Error al iniciar sesión. Por favor, intenta nuevamente.');
         throw error;
     }
 }
