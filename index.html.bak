@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuerdos de Amor para Karime 💖</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- Firebase SDK v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fce4ec;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            overflow-x: hidden;
+            color: #424242;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Dancing Script', cursive;
+            color: #e91e63;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin: 15px 0;
+        }
+
+        .love-letter {
+            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
+            padding: 20px;
+            border: 2px solid #ff4081;
+            border-radius: 20px;
+            margin: 10px auto;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 20px rgba(233, 30, 99, 0.1);
+            position: relative;
+        }
+
+        #loginBtn {
+            background: linear-gradient(45deg, #ff4081, #e91e63);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px rgba(233, 30, 99, 0.2);
+        }
+
+        #loginBtn:hover {
+            transform: scale(1.05);
+        }
+
+        #userInfo {
+            margin: 10px 0;
+            font-size: 1.1em;
+            color: #e91e63;
+        }
+
+        .calendar-container {
+            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(233, 30, 99, 0.15);
+            margin: 20px auto;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(233, 30, 99, 0.2);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .header button {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #e91e63;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .dates {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day {
+            padding: 5px;
+            font-weight: 500;
+            color: #e91e63;
+            font-size: 0.9em;
+        }
+
+        .date {
+            position: relative;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
+            padding: 20px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        #noteInput {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ff4081;
+            border-radius: 10px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .modal button {
+            background: linear-gradient(45deg, #ff4081, #e91e63);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        #notes-container {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+
+        .note-card {
+            background: #fff;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        /* Estilos específicos para móviles */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+                margin: 10px 0;
+            }
+
+            .love-letter {
+                padding: 15px;
+                margin: 5px auto;
+            }
+
+            .calendar-container {
+                padding: 10px;
+                margin: 10px auto;
+            }
+
+            .header button {
+                font-size: 1.2em;
+                width: 35px;
+                height: 35px;
+            }
+
+            .day {
+                padding: 3px;
+                font-size: 0.8em;
+            }
+
+            .date {
+                padding: 5px;
+                font-size: 0.8em;
+            }
+
+            .modal {
+                padding: 15px;
+                margin: 10px;
+            }
+
+            #noteInput {
+                min-height: 80px;
+            }
+
+            .note-card {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+
+            #notes-container {
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hearts-background" id="hearts-container"></div>
+    
+    <div class="love-letter">
+        <h1>Nuestro Calendario del Amor <span class="love-icon">💖</span></h1>
+        <div id="userInfo"></div>
+        <button id="loginBtn">Iniciar Sesión</button>
+    </div>
+
+    <div id="calendar-content" style="display: none;">
+        <div class="calendar-container">
+            <div class="header">
+                <button onclick="changeMonth(-1)">←</button>
+                <h2 id="monthDisplay"></h2>
+                <button onclick="changeMonth(1)">→</button>
+            </div>
+            <div class="days"></div>
+            <div class="dates"></div>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay" style="display: none;">
+        <div class="modal">
+            <h3>Notas para el <span id="selectedDate"></span></h3>
+            <div id="notes-container"></div>
+            <textarea id="noteInput" placeholder="Escribe tu nota aquí..."></textarea>
+            <button onclick="saveNote()">Guardar Nota</button>
+            <button onclick="closeOverlay()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
+            authDomain: "ninivibes-app.firebaseapp.com",
+            databaseURL: "https://ninivibes-app-default-rtdb.firebaseio.com",
+            projectId: "ninivibes-app",
+            storageBucket: "ninivibes-app.appspot.com",
+            messagingSenderId: "654722868873",
+            appId: "1:654722868873:web:a7d4d0d05ba4f8a5c9fb68"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        let currentUser = null;
+
+        // Función para manejar el inicio de sesión
+        function signIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    currentUser = result.user;
+                    document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
+                    document.getElementById('userInfo').textContent = `Hola, ${currentUser.displayName}`;
+                    document.getElementById('calendar-content').style.display = 'block';
+                    renderCalendar();
+                })
+                .catch((error) => {
+                    console.error("Error de autenticación:", error);
+                    alert("Error al iniciar sesión: " + error.message);
+                });
+        }
+
+        // Escuchar cambios en el estado de autenticación
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
+                document.getElementById('userInfo').textContent = `Hola, ${currentUser.displayName}`;
+                document.getElementById('calendar-content').style.display = 'block';
+                renderCalendar();
+            } else {
+                currentUser = null;
+                document.getElementById('loginBtn').textContent = 'Iniciar Sesión';
+                document.getElementById('userInfo').textContent = '';
+                document.getElementById('calendar-content').style.display = 'none';
+            }
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            if (!currentUser) {
+                signIn();
+            } else {
+                auth.signOut()
+                    .then(() => {
+                        console.log('Sesión cerrada');
+                    })
+                    .catch((error) => {
+                        console.error('Error al cerrar sesión:', error);
+                    });
+            }
+        });
+
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        let selectedDay = null;
+
+        const months = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+
+        function renderCalendar() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startingDay = firstDay.getDay();
+            const monthLength = lastDay.getDate();
+
+            document.getElementById('monthDisplay').textContent = `${months[currentMonth]} ${currentYear}`;
+            const datesContainer = document.querySelector('.dates');
+            datesContainer.innerHTML = '';
+
+            for (let i = 0; i < startingDay; i++) {
+                datesContainer.innerHTML += '<div></div>';
+            }
+
+            for (let day = 1; day <= monthLength; day++) {
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'date';
+                
+                if (day === currentDate.getDate() && 
+                    currentMonth === currentDate.getMonth() && 
+                    currentYear === currentDate.getFullYear()) {
+                    dateDiv.classList.add('today');
+                }
+
+                const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
+                checkNotesForDate(dateKey, dateDiv);
+
+                dateDiv.textContent = day;
+                dateDiv.onclick = () => openOverlay(day);
+                datesContainer.appendChild(dateDiv);
+            }
+        }
+
+        function checkNotesForDate(dateKey, dateDiv) {
+            const notesRef = database.ref(`notes/${dateKey}`);
+            notesRef.on('value', (snapshot) => {
+                const notes = snapshot.val() || {};
+                const hasMyNote = currentUser && notes[currentUser.uid];
+                const hasTheirNote = Object.keys(notes).some(uid => uid !== currentUser?.uid);
+
+                if (hasMyNote && hasTheirNote) {
+                    dateDiv.classList.add('has-both-notes');
+                } else if (hasMyNote) {
+                    dateDiv.classList.add('has-my-note');
+                } else if (hasTheirNote) {
+                    dateDiv.classList.add('has-their-note');
+                }
+            }, (error) => {
+                console.error('Error al cargar notas:', error);
+            });
+        }
+
+        function changeMonth(offset) {
+            currentMonth += offset;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function openOverlay(day) {
+            if (!currentUser) {
+                alert('Por favor inicia sesión para ver y agregar notas ❤️');
+                return;
+            }
+
+            selectedDay = day;
+            const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
+            const overlay = document.getElementById('overlay');
+            const notesDisplay = document.getElementById('notes-container');
+            const selectedDateElem = document.getElementById('selectedDate');
+
+            selectedDateElem.textContent = `${day} de ${months[currentMonth]} del ${currentYear}`;
+            overlay.style.display = 'flex';
+
+            // Cargar notas existentes
+            const notesRef = database.ref(`notes/${dateKey}`);
+            notesRef.on('value', (snapshot) => {
+                const notes = snapshot.val() || {};
+                notesDisplay.innerHTML = '';
+                
+                Object.entries(notes).forEach(([uid, noteData]) => {
+                    const noteCard = document.createElement('div');
+                    noteCard.className = `note-card ${uid === currentUser.uid ? 'my-note' : 'their-note'}`;
+                    
+                    const authorName = uid === currentUser.uid ? 'Tú' : noteData.authorName;
+                    const timestamp = new Date(noteData.timestamp).toLocaleString();
+                    
+                    noteCard.innerHTML = `
+                        <div class="note-author">${authorName}</div>
+                        <div class="note-content">${noteData.content}</div>
+                        <div class="note-timestamp">${timestamp}</div>
+                    `;
+                    
+                    notesDisplay.appendChild(noteCard);
+                });
+            }, (error) => {
+                console.error('Error al cargar notas:', error);
+            });
+        }
+
+        function closeOverlay() {
+            document.getElementById('overlay').style.display = 'none';
+            const notesRef = database.ref(`notes/${currentYear}-${currentMonth + 1}-${selectedDay}`);
+            notesRef.off(); // Dejar de escuchar cambios
+        }
+
+        function saveNote() {
+            if (!currentUser) return;
+
+            const noteInput = document.getElementById('noteInput');
+            const content = noteInput.value.trim();
+            
+            if (content) {
+                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDay}`;
+                const noteData = {
+                    content: content,
+                    authorName: currentUser.displayName,
+                    timestamp: Date.now()
+                };
+
+                database.ref(`notes/${dateKey}/${currentUser.uid}`).set(noteData)
+                    .then(() => {
+                        console.log('Nota guardada con éxito');
+                    })
+                    .catch((error) => {
+                        console.error('Error al guardar nota:', error);
+                        alert('Error al guardar nota: ' + error.message);
+                    });
+                noteInput.value = '';
+            }
+        }
+
+        // Crear corazones flotantes
+        function createHearts() {
+            const container = document.getElementById('hearts-container');
+            const numberOfHearts = 15;
+            
+            for (let i = 0; i < numberOfHearts; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDelay = Math.random() * 4 + 's';
+                heart.style.opacity = Math.random() * 0.5 + 0.3;
+                container.appendChild(heart);
+            }
+        }
+
+        // Inicializar
+        createHearts();
+    </script>
+</body>
+</html>

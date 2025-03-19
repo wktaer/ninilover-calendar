@@ -3,30 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuerdos de Amor para Karime 💖</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>NiniLover 💖</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v9 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #fce4ec;
+        :root {
+            --primary-color: #ff69b4;
+            --secondary-color: #ffb6c1;
+            --background-color: #fff0f5;
+            --text-color: #4a4a4a;
+        }
+
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #ff69b4, #ffb6c1);
             text-align: center;
-            overflow-x: hidden;
-            color: #424242;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        h1, h2, h3 {
-            font-family: 'Dancing Script', cursive;
-            color: #e91e63;
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 10px auto;
+            animation: bounce 2s infinite;
         }
 
-        .hearts-background {
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .clock {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+
+        .daily-message {
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .menu-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .floating-hearts {
             position: fixed;
             top: 0;
             left: 0;
@@ -38,361 +113,156 @@
 
         .heart {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            background: linear-gradient(45deg, #ff4081, #e91e63);
-            clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 50% 70%, 20% 100%, 0% 35%);
-            animation: floatHearts 4s ease-in-out infinite;
-            opacity: 0.6;
-            filter: drop-shadow(0 0 5px rgba(233, 30, 99, 0.3));
+            width: 20px;
+            height: 20px;
+            background: var(--primary-color);
+            transform: rotate(45deg);
+            animation: floatHeart 4s ease-in infinite;
+            opacity: 0.5;
         }
 
-        @keyframes floatHearts {
-            0%, 100% {
-                transform: translateY(0) rotate(0deg) scale(1);
+        .heart:before,
+        .heart:after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .heart:before {
+            left: -10px;
+        }
+
+        .heart:after {
+            top: -10px;
+        }
+
+        @keyframes floatHeart {
+            0% {
+                transform: translateY(100vh) rotate(45deg);
+                opacity: 0;
             }
             50% {
-                transform: translateY(-20px) rotate(10deg) scale(1.1);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100px) rotate(45deg);
+                opacity: 0;
             }
         }
 
-        .love-letter {
-            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
-            padding: 25px;
-            border: 2px solid #ff4081;
-            border-radius: 20px;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 20px rgba(233, 30, 99, 0.1);
-            position: relative;
-        }
-
-        .calendar-container {
-            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(233, 30, 99, 0.15);
-            margin: 30px auto;
-            max-width: 90%;
-            width: 600px;
-            border: 1px solid rgba(233, 30, 99, 0.2);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 20px;
-        }
-
-        .header h2 {
-            margin: 0;
-            font-size: 2em;
-            color: #e91e63;
-            font-family: 'Dancing Script', cursive;
-        }
-
-        .header button {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #e91e63;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .header button:hover {
-            transform: scale(1.1);
-            background-color: rgba(233, 30, 99, 0.1);
-        }
-
-        .days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .dates {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-        }
-
-        .day {
-            padding: 10px;
-            font-weight: 500;
-            color: #e91e63;
-            font-size: 0.9em;
-        }
-
-        .date {
-            position: relative;
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.95em;
-        }
-
-        .date:hover {
-            background-color: #fce4ec;
-            transform: scale(1.1);
-        }
-
-        .date.has-note::after {
-            font-size: 0.7em;
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-        }
-
-        .date.has-my-note::after {
-            content: '💙';
-        }
-
-        .date.has-their-note::after {
-            content: '💖';
-        }
-
-        .date.has-both-notes::after {
-            content: '💕';
-        }
-
-        .today {
-            background: linear-gradient(45deg, #ff4081, #e91e63);
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
-        }
-
-        .note-card {
-            background: #fff;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            position: relative;
-        }
-
-        .note-card.my-note {
-            border-left: 4px solid #2196f3;
-            background-color: #e3f2fd;
-        }
-
-        .note-card.their-note {
-            border-left: 4px solid #e91e63;
-            background-color: #fce4ec;
-        }
-
-        .note-author {
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .note-timestamp {
-            font-size: 0.7em;
-            color: #999;
-            position: absolute;
-            right: 10px;
-            top: 10px;
-        }
-
-        .login-container {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .login-btn {
-            background: linear-gradient(45deg, #ff4081, #e91e63);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
-        }
-
-        .user-info {
-            font-size: 0.9em;
-            color: #666;
-            margin: 10px 0;
-        }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .overlay-content {
-            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            position: relative;
-            z-index: 1010;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .note-input {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: 2px solid #ff4081;
-            border-radius: 10px;
-            font-size: 16px;
-            resize: vertical;
-            min-height: 100px;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .save-note-btn {
-            background: linear-gradient(45deg, #ff4081, #e91e63);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
-        }
-
-        .save-note-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #e91e63;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .close-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .note-display {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-            font-style: italic;
-            color: #666;
-        }
-
-        @keyframes heartBeat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .love-icon {
-            display: inline-block;
-            animation: heartBeat 1.5s infinite;
-            margin: 0 5px;
+        @media (max-width: 600px) {
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .clock {
+                font-size: 1.5rem;
+            }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="hearts-background" id="hearts-container"></div>
+    <div class="floating-hearts" id="hearts-container"></div>
     
-    <div class="love-letter">
-        <h1>Nuestro Calendario del Amor <span class="love-icon">💖</span></h1>
-        <div class="login-container">
-            <button id="loginBtn" class="login-btn">Iniciar Sesión</button>
-            <div id="userInfo" class="user-info"></div>
-        </div>
-        <div class="calendar-container">
-            <div class="header">
-                <button onclick="changeMonth(-1)">❮</button>
-                <h2 id="monthDisplay"></h2>
-                <button onclick="changeMonth(1)">❯</button>
-            </div>
-            <div class="days"></div>
-            <div class="dates"></div>
-        </div>
+    <header class="header">
+        <img src="https://clipart-library.com/images/8TxrBGEac.png" alt="Hello Kitty" class="logo">
+        <div class="clock" id="clock">00:00:00</div>
+        <div id="userInfo"></div>
+        <button id="loginBtn" onclick="handleAuth()">Iniciar Sesión</button>
+    </header>
+
+    <div class="daily-message">
+        <h2>Mensaje del Día 💌</h2>
+        <p id="dailyMessage"></p>
     </div>
 
-    <div class="overlay" id="overlay">
-        <div class="overlay-content">
-            <button class="close-btn" onclick="closeOverlay()">×</button>
-            <h3 id="selectedDate"></h3>
-            <div id="notesDisplay" class="notes-display"></div>
-            <textarea id="noteInput" class="note-input" placeholder="Escribe una nota de amor para este día especial..."></textarea>
-            <button class="save-note-btn" onclick="saveNote()">Guardar Nota 💝</button>
+    <div class="menu-grid">
+        <div class="menu-item" onclick="location.href='calendar.html'">
+            <i class="fas fa-calendar-heart"></i>
+            <h3>Calendario</h3>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-images"></i>
+            <h3>Recuerdos</h3>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-envelope-heart"></i>
+            <h3>Cartas de Amor</h3>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-music"></i>
+            <h3>Nuestra Playlist</h3>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-star"></i>
+            <h3>Momentos Especiales</h3>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-comments-heart"></i>
+            <h3>Chat Lover</h3>
         </div>
     </div>
 
     <script>
-        // Configuración de Firebase
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
-            authDomain: "ninivibes-app.firebaseapp.com",
-            databaseURL: "https://ninivibes-app-default-rtdb.firebaseio.com",
-            projectId: "ninivibes-app",
-            storageBucket: "ninivibes-app.appspot.com",
-            messagingSenderId: "654722868873",
-            appId: "1:654722868873:web:a7d4d0d05ba4f8a5c9fb68"
+            apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
+            authDomain: "ninilover-calendar.firebaseapp.com",
+            databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
+            projectId: "ninilover-calendar",
+            storageBucket: "ninilover-calendar.appspot.com",
+            messagingSenderId: "1063597046269",
+            appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f"
         };
 
-        // Inicializar Firebase
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const database = firebase.database();
         let currentUser = null;
 
-        // Función para manejar el inicio de sesión
-        function signIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    currentUser = result.user;
-                    document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
-                    document.getElementById('userInfo').textContent = `Hola, ${currentUser.displayName}`;
-                    renderCalendar();
-                })
-                .catch((error) => {
-                    console.error("Error de autenticación:", error);
-                    alert("Error al iniciar sesión: " + error.message);
-                });
+        // Actualizar reloj
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            document.getElementById('clock').textContent = time;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Mensajes diarios
+        const messages = [
+            "Cada día te amo más y más 💖",
+            "Eres mi sol en días nublados ☀️",
+            "Contigo todo es más bonito 🌸",
+            "Mi corazón late por ti 💓",
+            "Eres mi amor eterno 💝"
+        ];
+
+        function updateDailyMessage() {
+            const today = new Date();
+            const messageIndex = today.getDate() % messages.length;
+            document.getElementById('dailyMessage').textContent = messages[messageIndex];
+        }
+        updateDailyMessage();
+
+        // Autenticación
+        function handleAuth() {
+            if (currentUser) {
+                auth.signOut();
+            } else {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                auth.signInWithPopup(provider);
+            }
         }
 
-        // Escuchar cambios en el estado de autenticación
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
-                document.getElementById('userInfo').textContent = `Hola, ${currentUser.displayName}`;
-                renderCalendar();
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
             } else {
                 currentUser = null;
                 document.getElementById('loginBtn').textContent = 'Iniciar Sesión';
@@ -400,184 +270,20 @@
             }
         });
 
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            if (!currentUser) {
-                signIn();
-            } else {
-                auth.signOut()
-                    .then(() => {
-                        console.log('Sesión cerrada');
-                    })
-                    .catch((error) => {
-                        console.error('Error al cerrar sesión:', error);
-                    });
-            }
-        });
-
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
-        let selectedDay = null;
-
-        const months = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        ];
-
-        function renderCalendar() {
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const startingDay = firstDay.getDay();
-            const monthLength = lastDay.getDate();
-
-            document.getElementById('monthDisplay').textContent = `${months[currentMonth]} ${currentYear}`;
-            const datesContainer = document.querySelector('.dates');
-            datesContainer.innerHTML = '';
-
-            for (let i = 0; i < startingDay; i++) {
-                datesContainer.innerHTML += '<div></div>';
-            }
-
-            for (let day = 1; day <= monthLength; day++) {
-                const dateDiv = document.createElement('div');
-                dateDiv.className = 'date';
-                
-                if (day === currentDate.getDate() && 
-                    currentMonth === currentDate.getMonth() && 
-                    currentYear === currentDate.getFullYear()) {
-                    dateDiv.classList.add('today');
-                }
-
-                const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
-                checkNotesForDate(dateKey, dateDiv);
-
-                dateDiv.textContent = day;
-                dateDiv.onclick = () => openOverlay(day);
-                datesContainer.appendChild(dateDiv);
-            }
-        }
-
-        function checkNotesForDate(dateKey, dateDiv) {
-            const notesRef = database.ref(`notes/${dateKey}`);
-            notesRef.on('value', (snapshot) => {
-                const notes = snapshot.val() || {};
-                const hasMyNote = currentUser && notes[currentUser.uid];
-                const hasTheirNote = Object.keys(notes).some(uid => uid !== currentUser?.uid);
-
-                if (hasMyNote && hasTheirNote) {
-                    dateDiv.classList.add('has-both-notes');
-                } else if (hasMyNote) {
-                    dateDiv.classList.add('has-my-note');
-                } else if (hasTheirNote) {
-                    dateDiv.classList.add('has-their-note');
-                }
-            }, (error) => {
-                console.error('Error al cargar notas:', error);
-            });
-        }
-
-        function changeMonth(offset) {
-            currentMonth += offset;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            } else if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
-        }
-
-        function openOverlay(day) {
-            if (!currentUser) {
-                alert('Por favor inicia sesión para ver y agregar notas ❤️');
-                return;
-            }
-
-            selectedDay = day;
-            const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
-            const overlay = document.getElementById('overlay');
-            const notesDisplay = document.getElementById('notesDisplay');
-            const selectedDateElem = document.getElementById('selectedDate');
-
-            selectedDateElem.textContent = `${day} de ${months[currentMonth]} del ${currentYear}`;
-            overlay.style.display = 'flex';
-
-            // Cargar notas existentes
-            const notesRef = database.ref(`notes/${dateKey}`);
-            notesRef.on('value', (snapshot) => {
-                const notes = snapshot.val() || {};
-                notesDisplay.innerHTML = '';
-                
-                Object.entries(notes).forEach(([uid, noteData]) => {
-                    const noteCard = document.createElement('div');
-                    noteCard.className = `note-card ${uid === currentUser.uid ? 'my-note' : 'their-note'}`;
-                    
-                    const authorName = uid === currentUser.uid ? 'Tú' : noteData.authorName;
-                    const timestamp = new Date(noteData.timestamp).toLocaleString();
-                    
-                    noteCard.innerHTML = `
-                        <div class="note-author">${authorName}</div>
-                        <div class="note-content">${noteData.content}</div>
-                        <div class="note-timestamp">${timestamp}</div>
-                    `;
-                    
-                    notesDisplay.appendChild(noteCard);
-                });
-            }, (error) => {
-                console.error('Error al cargar notas:', error);
-            });
-        }
-
-        function closeOverlay() {
-            document.getElementById('overlay').style.display = 'none';
-            const notesRef = database.ref(`notes/${currentYear}-${currentMonth + 1}-${selectedDay}`);
-            notesRef.off(); // Dejar de escuchar cambios
-        }
-
-        function saveNote() {
-            if (!currentUser) return;
-
-            const noteInput = document.getElementById('noteInput');
-            const content = noteInput.value.trim();
-            
-            if (content) {
-                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDay}`;
-                const noteData = {
-                    content: content,
-                    authorName: currentUser.displayName,
-                    timestamp: Date.now()
-                };
-
-                database.ref(`notes/${dateKey}/${currentUser.uid}`).set(noteData)
-                    .then(() => {
-                        console.log('Nota guardada con éxito');
-                    })
-                    .catch((error) => {
-                        console.error('Error al guardar nota:', error);
-                        alert('Error al guardar nota: ' + error.message);
-                    });
-                noteInput.value = '';
-            }
-        }
-
-        // Crear corazones flotantes
-        function createHearts() {
+        // Corazones flotantes
+        function createFloatingHearts() {
             const container = document.getElementById('hearts-container');
-            const numberOfHearts = 15;
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = Math.random() * 100 + 'vw';
+            container.appendChild(heart);
             
-            for (let i = 0; i < numberOfHearts; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'heart';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.animationDelay = Math.random() * 4 + 's';
-                heart.style.opacity = Math.random() * 0.5 + 0.3;
-                container.appendChild(heart);
-            }
+            setTimeout(() => {
+                heart.remove();
+            }, 4000);
         }
 
-        // Inicializar
-        createHearts();
+        setInterval(createFloatingHearts, 300);
     </script>
 </body>
 </html>

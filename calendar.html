@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NiniLover - Calendario 💖</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #ff69b4;
+            --secondary-color: #ffb6c1;
+            --background-color: #fff0f5;
+            --text-color: #4a4a4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #ff69b4, #ffb6c1);
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--primary-color);
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+
+        .calendar-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-navigation button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--primary-color);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .month-navigation button:hover {
+            background-color: var(--background-color);
+        }
+
+        .month-display {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-header {
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 10px;
+        }
+
+        .date-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .date-cell:hover {
+            background-color: var(--background-color);
+            transform: scale(1.1);
+        }
+
+        .date-cell.today {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .date-cell.has-note::after {
+            content: '💌';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.7em;
+        }
+
+        .note-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .note-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            margin: 15px 0;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .save-note {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .save-note:hover {
+            transform: scale(1.05);
+        }
+
+        .notes-display {
+            margin-top: 20px;
+        }
+
+        .note-card {
+            background: var(--background-color);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .note-author {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .note-timestamp {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .calendar-container {
+                padding: 10px;
+            }
+
+            .date-cell {
+                font-size: 0.9em;
+            }
+
+            .back-button {
+                top: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="location.href='index.html'">
+        ← Volver
+    </button>
+
+    <div class="header">
+        <h1>Nuestro Calendario del Amor 💖</h1>
+        <div id="userInfo"></div>
+    </div>
+
+    <div class="calendar-container">
+        <div class="month-navigation">
+            <button onclick="changeMonth(-1)">❮</button>
+            <div class="month-display" id="monthDisplay"></div>
+            <button onclick="changeMonth(1)">❯</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Calendar will be generated here -->
+        </div>
+    </div>
+
+    <div class="note-modal" id="noteModal">
+        <div class="note-content">
+            <button class="close-modal" onclick="closeNoteModal()">×</button>
+            <h2 id="selectedDate"></h2>
+            <div class="notes-display" id="notesDisplay"></div>
+            <textarea id="noteInput" class="note-input" placeholder="Escribe una nota de amor para este día especial..."></textarea>
+            <button class="save-note" onclick="saveNote()">Guardar Nota 💝</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
+            authDomain: "ninilover-calendar.firebaseapp.com",
+            databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
+            projectId: "ninilover-calendar",
+            storageBucket: "ninilover-calendar.appspot.com",
+            messagingSenderId: "1063597046269",
+            appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        let currentUser = null;
+
+        // Calendar variables
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        let selectedDay = null;
+
+        const months = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+
+        const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+                renderCalendar();
+            } else {
+                currentUser = null;
+                document.getElementById('userInfo').textContent = 'Por favor inicia sesión en la página principal';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        });
+
+        function renderCalendar() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startingDay = firstDay.getDay();
+            const monthLength = lastDay.getDate();
+
+            document.getElementById('monthDisplay').textContent = `${months[currentMonth]} ${currentYear}`;
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Add day headers
+            days.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                grid.appendChild(dayHeader);
+            });
+
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            // Add date cells
+            for (let day = 1; day <= monthLength; day++) {
+                const dateCell = document.createElement('div');
+                dateCell.className = 'date-cell';
+                
+                if (day === currentDate.getDate() && 
+                    currentMonth === currentDate.getMonth() && 
+                    currentYear === currentDate.getFullYear()) {
+                    dateCell.classList.add('today');
+                }
+
+                const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
+                checkNotesForDate(dateKey, dateCell);
+
+                dateCell.textContent = day;
+                dateCell.onclick = () => openNoteModal(day);
+                grid.appendChild(dateCell);
+            }
+        }
+
+        function checkNotesForDate(dateKey, dateCell) {
+            const notesRef = database.ref(`notes/${dateKey}`);
+            notesRef.on('value', (snapshot) => {
+                const notes = snapshot.val();
+                if (notes) {
+                    dateCell.classList.add('has-note');
+                }
+            });
+        }
+
+        function changeMonth(offset) {
+            currentMonth += offset;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function openNoteModal(day) {
+            if (!currentUser) {
+                alert('Por favor inicia sesión para ver y agregar notas ❤️');
+                return;
+            }
+
+            selectedDay = day;
+            const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
+            const modal = document.getElementById('noteModal');
+            const notesDisplay = document.getElementById('notesDisplay');
+            const selectedDateElem = document.getElementById('selectedDate');
+
+            selectedDateElem.textContent = `${day} de ${months[currentMonth]} del ${currentYear}`;
+            modal.style.display = 'flex';
+
+            // Load existing notes
+            const notesRef = database.ref(`notes/${dateKey}`);
+            notesRef.on('value', (snapshot) => {
+                const notes = snapshot.val() || {};
+                notesDisplay.innerHTML = '';
+                
+                Object.entries(notes).forEach(([uid, noteData]) => {
+                    const noteCard = document.createElement('div');
+                    noteCard.className = 'note-card';
+                    
+                    noteCard.innerHTML = `
+                        <div class="note-author">${noteData.authorName}</div>
+                        <div class="note-content">${noteData.content}</div>
+                        <div class="note-timestamp">${new Date(noteData.timestamp).toLocaleString()}</div>
+                    `;
+                    
+                    notesDisplay.appendChild(noteCard);
+                });
+            });
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').style.display = 'none';
+            const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDay}`;
+            const notesRef = database.ref(`notes/${dateKey}`);
+            notesRef.off();
+        }
+
+        function saveNote() {
+            if (!currentUser) return;
+
+            const noteInput = document.getElementById('noteInput');
+            const content = noteInput.value.trim();
+            
+            if (content) {
+                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDay}`;
+                const noteData = {
+                    content: content,
+                    authorName: currentUser.displayName,
+                    timestamp: Date.now()
+                };
+
+                database.ref(`notes/${dateKey}/${currentUser.uid}`).set(noteData)
+                    .then(() => {
+                        noteInput.value = '';
+                        renderCalendar();
+                    })
+                    .catch((error) => {
+                        console.error('Error al guardar nota:', error);
+                        alert('Error al guardar nota: ' + error.message);
+                    });
+            }
+        }
+
+        // Initialize calendar
+        if (currentUser) {
+            renderCalendar();
+        }
+    </script>
+</body>
+</html>
