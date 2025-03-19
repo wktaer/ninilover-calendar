@@ -7,11 +7,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
     <script type="module">
-        import { auth, onAuthStateChanged, handleAuth, handleSignOut } from './js/firebase-init.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Hacer las funciones disponibles globalmente
-        window.handleAuth = handleAuth;
-        window.handleSignOut = handleSignOut;
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
+            authDomain: "ninilover-app.firebaseapp.com",
+            projectId: "ninilover-app",
+            storageBucket: "ninilover-app.appspot.com",
+            messagingSenderId: "1067612365943",
+            appId: "1:1067612365943:web:52cefbd8a8691987e7c3e",
+            measurementId: "G-JR18EWKJFB",
+            databaseURL: "https://ninilover-app-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Función para manejar el inicio de sesión
+        window.handleAuth = async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error('Error de autenticación:', error);
+                alert('Error al iniciar sesión: ' + error.message);
+            }
+        };
+
+        // Función para manejar el cierre de sesión
+        window.handleSignOut = async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                alert('Error al cerrar sesión: ' + error.message);
+            }
+        };
 
         // Observar cambios en la autenticación
         onAuthStateChanged(auth, (user) => {
