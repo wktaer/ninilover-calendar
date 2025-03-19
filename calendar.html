@@ -6,8 +6,200 @@
     <title>NiniLover - Calendario 📅</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
-    <script type="module" src="js/firebase-init.js"></script>
-    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
+            authDomain: "ninilover-app.firebaseapp.com",
+            projectId: "ninilover-app",
+            storageBucket: "ninilover-app.appspot.com",
+            messagingSenderId: "1067612365943",
+            appId: "1:1067612365943:web:52cefbd8a8691987e7c3e",
+            measurementId: "G-JR18EWKJFB",
+            databaseURL: "https://ninilover-app-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        let currentUser = null;
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let selectedDate = null;
+
+        const months = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+
+        const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+        // Observar cambios en la autenticación
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+                renderCalendar();
+            } else {
+                currentUser = null;
+                document.getElementById('userInfo').innerHTML = `
+                    <p>Por favor inicia sesión para ver el calendario 💝</p>
+                    <button onclick="handleAuth()" style="
+                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        font-weight: 600;
+                    ">Iniciar Sesión</button>
+                `;
+            }
+        });
+
+        function handleAuth() {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider);
+        }
+
+        function renderCalendar() {
+            if (!currentUser) return;
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            
+            document.getElementById('currentMonthYear').textContent = `${months[currentMonth]} ${currentYear}`;
+            
+            const calendarBody = document.getElementById('calendarGrid');
+            calendarBody.innerHTML = '';
+            
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('div');
+                row.className = 'calendar-row';
+                
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'calendar-cell';
+                    
+                    if (i === 0 && j < firstDay.getDay()) {
+                        cell.textContent = '';
+                    } else if (date > lastDay.getDate()) {
+                        break;
+                    } else {
+                        const dateCell = document.createElement('div');
+                        dateCell.className = 'date-cell';
+                        
+                        if (date === new Date().getDate() && 
+                            currentMonth === new Date().getMonth() && 
+                            currentYear === new Date().getFullYear()) {
+                            dateCell.classList.add('today');
+                        }
+
+                        dateCell.textContent = date;
+                        dateCell.onclick = () => showNotes(date);
+                        
+                        cell.appendChild(dateCell);
+                        date++;
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                calendarBody.appendChild(row);
+                if (date > lastDay.getDate()) break;
+            }
+        }
+
+        window.prevMonth = () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        };
+
+        window.nextMonth = () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        };
+
+        function showNotes(day) {
+            if (!currentUser) {
+                alert('Por favor inicia sesión para ver las notas 💝');
+                return;
+            }
+
+            selectedDate = day;
+            const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
+            const modal = document.getElementById('noteModal');
+            const notesDisplay = document.getElementById('notesDisplay');
+            const dateDisplay = document.getElementById('selectedDate');
+            
+            dateDisplay.textContent = `${day} de ${months[currentMonth]} del ${currentYear}`;
+            modal.style.display = 'block';
+            
+            const notesRef = ref(database, `notes/${dateKey}`);
+            onValue(notesRef, (snapshot) => {
+                const notes = snapshot.val() || {};
+                notesDisplay.innerHTML = '';
+                
+                Object.entries(notes).forEach(([key, note]) => {
+                    const noteElement = document.createElement('div');
+                    noteElement.className = 'note-item';
+                    noteElement.innerHTML = `
+                        <p class="note-content">${note.content}</p>
+                        <p class="note-author">Por ${note.authorName}</p>
+                        <p class="note-time">${new Date(note.timestamp).toLocaleTimeString()}</p>
+                    `;
+                    notesDisplay.appendChild(noteElement);
+                });
+            });
+        }
+
+        window.closeNoteModal = () => {
+            document.getElementById('noteModal').style.display = 'none';
+        };
+
+        window.addNote = async () => {
+            if (!currentUser) return;
+            
+            const noteInput = document.getElementById('noteInput');
+            const content = noteInput.value.trim();
+            
+            if (content) {
+                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDate}`;
+                const noteData = {
+                    content: content,
+                    authorName: currentUser.displayName,
+                    authorId: currentUser.uid,
+                    timestamp: Date.now()
+                };
+                
+                try {
+                    await set(ref(database, `notes/${dateKey}/${Date.now()}`), noteData);
+                    noteInput.value = '';
+                } catch (error) {
+                    console.error('Error al guardar la nota:', error);
+                    alert('Error al guardar la nota: ' + error.message);
+                }
+            }
+        };
+
+        // Inicializar calendario
+        renderCalendar();
+    </script>
     <style>
         :root {
             --primary-color: #ff69b4;
@@ -271,189 +463,5 @@
             <button class="save-note" onclick="addNote()">Guardar Nota 💝</button>
         </div>
     </div>
-
-    <script type="module">
-        import { 
-            auth, 
-            database,
-            ref,
-            set,
-            onValue,
-            onAuthStateChanged
-        } from './js/firebase-init.js';
-
-        let currentUser = null;
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth();
-        let selectedDate = null;
-
-        const months = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        ];
-
-        const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-
-        // Auth state observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-                renderCalendar();
-            } else {
-                currentUser = null;
-                document.getElementById('userInfo').innerHTML = `
-                    <p>Por favor inicia sesión para ver el calendario 💝</p>
-                    <button onclick="handleAuth()" style="
-                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-                        color: white;
-                        border: none;
-                        padding: 12px 25px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        margin-top: 10px;
-                        font-weight: 600;
-                    ">Iniciar Sesión</button>
-                `;
-            }
-        });
-
-        function handleAuth() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
-        }
-
-        function renderCalendar() {
-            if (!currentUser) return;
-
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            
-            document.getElementById('currentMonthYear').textContent = `${months[currentMonth]} ${currentYear}`;
-            
-            const calendarBody = document.getElementById('calendarGrid');
-            calendarBody.innerHTML = '';
-            
-            let date = 1;
-            for (let i = 0; i < 6; i++) {
-                const row = document.createElement('div');
-                row.className = 'calendar-row';
-                
-                for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'calendar-cell';
-                    
-                    if (i === 0 && j < firstDay.getDay()) {
-                        cell.textContent = '';
-                    } else if (date > lastDay.getDate()) {
-                        break;
-                    } else {
-                        const dateCell = document.createElement('div');
-                        dateCell.className = 'date-cell';
-                        
-                        if (date === new Date().getDate() && 
-                            currentMonth === new Date().getMonth() && 
-                            currentYear === new Date().getFullYear()) {
-                            dateCell.classList.add('today');
-                        }
-
-                        dateCell.textContent = date;
-                        dateCell.onclick = () => showNotes(date);
-                        
-                        cell.appendChild(dateCell);
-                        date++;
-                    }
-                    
-                    row.appendChild(cell);
-                }
-                
-                calendarBody.appendChild(row);
-                if (date > lastDay.getDate()) break;
-            }
-        }
-
-        window.prevMonth = () => {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        };
-
-        window.nextMonth = () => {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
-        };
-
-        function showNotes(day) {
-            if (!currentUser) {
-                alert('Por favor inicia sesión para ver las notas 💝');
-                return;
-            }
-
-            selectedDate = day;
-            const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
-            const modal = document.getElementById('noteModal');
-            const notesDisplay = document.getElementById('notesDisplay');
-            const dateDisplay = document.getElementById('selectedDate');
-            
-            dateDisplay.textContent = `${day} de ${months[currentMonth]} del ${currentYear}`;
-            modal.style.display = 'block';
-            
-            const notesRef = ref(database, `notes/${dateKey}`);
-            onValue(notesRef, (snapshot) => {
-                const notes = snapshot.val() || {};
-                notesDisplay.innerHTML = '';
-                
-                Object.entries(notes).forEach(([key, note]) => {
-                    const noteElement = document.createElement('div');
-                    noteElement.className = 'note-item';
-                    noteElement.innerHTML = `
-                        <p class="note-content">${note.content}</p>
-                        <p class="note-author">Por ${note.authorName}</p>
-                        <p class="note-time">${new Date(note.timestamp).toLocaleTimeString()}</p>
-                    `;
-                    notesDisplay.appendChild(noteElement);
-                });
-            });
-        }
-
-        window.closeNoteModal = () => {
-            document.getElementById('noteModal').style.display = 'none';
-        };
-
-        window.addNote = async () => {
-            if (!currentUser) return;
-            
-            const noteInput = document.getElementById('noteInput');
-            const content = noteInput.value.trim();
-            
-            if (content) {
-                const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDate}`;
-                const noteData = {
-                    content: content,
-                    authorName: currentUser.displayName,
-                    authorId: currentUser.uid,
-                    timestamp: Date.now()
-                };
-                
-                try {
-                    await set(ref(database, `notes/${dateKey}/${Date.now()}`), noteData);
-                    noteInput.value = '';
-                } catch (error) {
-                    console.error('Error al guardar la nota:', error);
-                    alert('Error al guardar la nota: ' + error.message);
-                }
-            }
-        };
-
-        // Inicializar calendario
-        renderCalendar();
-    </script>
 </body>
 </html>
