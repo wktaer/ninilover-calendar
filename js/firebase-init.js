@@ -6,14 +6,13 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-s
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzZyICYOaVdVmjWZwW9j0WOkk8aQvVX2SBEsN",
-    authDomain: "ninilover-app.firebaseapp.com",
+    apiKey: "AIzaSyBKHKFIxgvDvRJxBBIVUaJ7OFtFnAcxYZc",
+    authDomain: "ninilover-calendar.firebaseapp.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
-    messagingSenderId: "1067612365943",
-    appId: "1:1067612365943:web:52cefbd8a8691987e7c3e",
-    measurementId: "G-JR18EWKJFB",
-    databaseURL: "https://ninilover-app-default-rtdb.firebaseio.com"
+    messagingSenderId: "1063597046269",
+    appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f",
+    databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
@@ -28,22 +27,39 @@ const provider = new GoogleAuthProvider();
 // Auth functions
 async function handleAuth() {
     try {
+        console.log("Intentando iniciar sesión...");
         const result = await signInWithPopup(auth, provider);
-        console.log("Usuario autenticado:", result.user.displayName);
+        console.log("Inicio de sesión exitoso:", result.user.displayName);
         return result.user;
     } catch (error) {
-        console.error("Error de autenticación:", error);
-        alert('Error al iniciar sesión');
+        console.error("Error completo:", error);
+        
+        let errorMessage = "Error al iniciar sesión";
+        if (error.code === 'auth/popup-blocked') {
+            errorMessage = 'Por favor permite las ventanas emergentes para iniciar sesión';
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = 'Ventana de inicio de sesión cerrada';
+        } else if (error.code === 'auth/unauthorized-domain') {
+            errorMessage = 'Este dominio no está autorizado. Por favor contacta al administrador.';
+        } else if (error.code === 'auth/cancelled-popup-request') {
+            errorMessage = 'Solicitud de inicio de sesión cancelada';
+        } else if (error.code === 'auth/network-request-failed') {
+            errorMessage = 'Error de red. Por favor verifica tu conexión';
+        }
+        
+        alert(errorMessage);
+        console.error("Código de error:", error.code);
+        console.error("Mensaje de error:", error.message);
     }
 }
 
 async function handleSignOut() {
     try {
         await auth.signOut();
-        console.log("Sesión cerrada");
+        console.log("Sesión cerrada exitosamente");
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
-        alert('Error al cerrar sesión');
+        alert('Error al cerrar sesión: ' + error.message);
     }
 }
 
