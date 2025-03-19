@@ -5,13 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiniLover 💖</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK v9.22.2 -->
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-    <!-- Firebase Config -->
-    <script defer src="js/firebase-config.js"></script>
+    <!-- Firebase SDK v10 -->
+    <script type="module" src="js/firebase-init.js"></script>
     
     <style>
         :root {
@@ -209,7 +204,9 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { auth } from './js/firebase-init.js';
+
         let currentUser = null;
 
         // Actualizar reloj

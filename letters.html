@@ -5,13 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiniLover - Cartas de Amor 💌</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK v9.22.2 -->
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-    <!-- Firebase Config -->
-    <script defer src="js/firebase-config.js"></script>
+    <!-- Firebase SDK v10 -->
+    <script type="module" src="js/firebase-init.js"></script>
     
     <style>
         :root {
@@ -237,7 +232,9 @@
         <div class="letters-list" id="lettersList"></div>
     </div>
 
-    <script>
+    <script type="module">
+        import { auth, database } from './js/firebase-init.js';
+
         let currentUser = null;
 
         // Auth state observer
@@ -252,8 +249,8 @@
                 document.getElementById('userInfo').innerHTML = `
                     <p>Por favor inicia sesión para ver las cartas 💝</p>
                     <button onclick="handleAuth()" style="
-                        background: white;
-                        color: var(--primary-color);
+                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                        color: white;
                         border: none;
                         padding: 12px 25px;
                         border-radius: 25px;
@@ -267,83 +264,83 @@
             }
         });
 
-        // Autenticación
-        function handleAuth() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
-        }
-
-        // Cargar cartas
-        function loadLetters() {
-            const loading = document.getElementById('loading');
-            const lettersList = document.getElementById('lettersList');
-            
-            loading.style.display = 'block';
-            lettersList.innerHTML = '';
-
-            database.ref('letters').on('value', (snapshot) => {
-                loading.style.display = 'none';
-                lettersList.innerHTML = '';
-                
-                const letters = snapshot.val() || {};
-                Object.entries(letters).reverse().forEach(([key, letter]) => {
-                    const card = document.createElement('div');
-                    card.className = 'letter-card letter-decoration';
-                    
-                    card.innerHTML = `
-                        <div class="letter-header">
-                            <h3>${letter.title}</h3>
-                            <div class="letter-date">${new Date(letter.timestamp).toLocaleDateString()}</div>
-                        </div>
-                        <div class="letter-body">${letter.content}</div>
-                        <div class="letter-author">Con amor, ${letter.authorName}</div>
-                    `;
-                    
-                    lettersList.appendChild(card);
-                });
-            });
-        }
-
-        // Enviar carta
-        async function sendLetter() {
+        window.sendLetter = async () => {
             if (!currentUser) return;
 
             const titleInput = document.getElementById('letterTitle');
             const contentInput = document.getElementById('letterContent');
-            
             const title = titleInput.value.trim();
             const content = contentInput.value.trim();
 
             if (!title || !content) {
-                alert('Por favor escribe un título y el contenido de tu carta 💝');
+                alert('Por favor escribe un título y contenido para tu carta 💌');
                 return;
             }
 
-            const loading = document.getElementById('loading');
-            loading.style.display = 'block';
-
             try {
+                const timestamp = Date.now();
                 const letterData = {
                     title,
                     content,
+                    timestamp,
                     authorName: currentUser.displayName,
-                    authorId: currentUser.uid,
-                    timestamp: Date.now()
+                    authorId: currentUser.uid
                 };
 
-                await database.ref('letters').push(letterData);
+                await database.ref(`letters/${timestamp}`).set(letterData);
 
                 // Limpiar formulario
                 titleInput.value = '';
                 contentInput.value = '';
-                loading.style.display = 'none';
-                alert('¡Carta enviada con éxito! 💌');
 
+                // Recargar cartas
+                loadLetters();
             } catch (error) {
-                console.error('Error al enviar la carta:', error);
-                alert('Error al enviar la carta: ' + error.message);
-                loading.style.display = 'none';
+                console.error('Error al enviar carta:', error);
+                alert('Error al enviar carta: ' + error.message);
             }
+        };
+
+        async function loadLetters() {
+            if (!currentUser) return;
+
+            const lettersContainer = document.getElementById('lettersList');
+            lettersContainer.innerHTML = '';
+
+            try {
+                const lettersRef = database.ref('letters');
+                const snapshot = await lettersRef.once('value');
+                const letters = snapshot.val() || {};
+
+                // Convertir objeto a array y ordenar por timestamp
+                const lettersArray = Object.values(letters).sort((a, b) => b.timestamp - a.timestamp);
+
+                lettersArray.forEach(letter => {
+                    const letterCard = document.createElement('div');
+                    letterCard.className = 'letter-card';
+                    
+                    letterCard.innerHTML = `
+                        <div class="letter-header">
+                            <h3 class="letter-title">${letter.title}</h3>
+                            <div class="letter-meta">
+                                <span class="letter-author">De ${letter.authorName}</span>
+                                <span class="letter-date">${new Date(letter.timestamp).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="letter-content">${letter.content}</div>
+                    `;
+                    
+                    lettersContainer.appendChild(letterCard);
+                });
+            } catch (error) {
+                console.error('Error al cargar cartas:', error);
+                alert('Error al cargar cartas: ' + error.message);
+            }
+        }
+
+        function handleAuth() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
         }
     </script>
 </body>
