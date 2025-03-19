@@ -27,13 +27,47 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
+        // Configuración adicional del proveedor
+        provider.addScope('profile');
+        provider.addScope('email');
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
         // Función para manejar el inicio de sesión
         window.handleAuth = async () => {
             try {
-                await signInWithPopup(auth, provider);
+                console.log('Iniciando proceso de autenticación...');
+                const result = await signInWithPopup(auth, provider);
+                console.log('Usuario autenticado:', result.user);
             } catch (error) {
-                console.error('Error de autenticación:', error);
-                alert('Error al iniciar sesión: ' + error.message);
+                console.error('Error detallado de autenticación:', {
+                    code: error.code,
+                    message: error.message,
+                    email: error.email,
+                    credential: error.credential
+                });
+                
+                let errorMessage = 'Error al iniciar sesión: ';
+                
+                switch (error.code) {
+                    case 'auth/popup-blocked':
+                        errorMessage += 'El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.';
+                        break;
+                    case 'auth/popup-closed-by-user':
+                        errorMessage += 'La ventana de inicio de sesión fue cerrada antes de completar el proceso.';
+                        break;
+                    case 'auth/unauthorized-domain':
+                        errorMessage += 'Este dominio no está autorizado para realizar operaciones de autenticación. Por favor, contacta al administrador.';
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage += 'El inicio de sesión con Google no está habilitado. Por favor, contacta al administrador.';
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
             }
         };
 
@@ -41,6 +75,7 @@
         window.handleSignOut = async () => {
             try {
                 await signOut(auth);
+                console.log('Usuario cerró sesión exitosamente');
             } catch (error) {
                 console.error('Error al cerrar sesión:', error);
                 alert('Error al cerrar sesión: ' + error.message);
@@ -51,10 +86,16 @@
         onAuthStateChanged(auth, (user) => {
             const loginBtn = document.getElementById('loginBtn');
             if (user) {
+                console.log('Estado de autenticación: Usuario conectado', {
+                    displayName: user.displayName,
+                    email: user.email,
+                    uid: user.uid
+                });
                 loginBtn.textContent = 'Cerrar Sesión';
                 loginBtn.onclick = () => handleSignOut();
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
             } else {
+                console.log('Estado de autenticación: Usuario no conectado');
                 loginBtn.textContent = 'Iniciar Sesión';
                 loginBtn.onclick = () => handleAuth();
                 document.getElementById('userInfo').textContent = '';
