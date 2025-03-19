@@ -6,8 +6,117 @@
     <title>NiniLover - Cartas de Amor 💌</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
-    <script type="module" src="js/firebase-init.js"></script>
-    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
+            authDomain: "ninilover-app.firebaseapp.com",
+            projectId: "ninilover-app",
+            storageBucket: "ninilover-app.appspot.com",
+            messagingSenderId: "1067612365943",
+            appId: "1:1067612365943:web:52cefbd8a8691987e7c3e",
+            measurementId: "G-JR18EWKJFB",
+            databaseURL: "https://ninilover-app-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        let currentUser = null;
+
+        // Observar cambios en la autenticación
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+                document.getElementById('writeSection').style.display = 'block';
+                loadLetters();
+            } else {
+                document.getElementById('userInfo').innerHTML = `
+                    <p>Por favor inicia sesión para ver las cartas 💝</p>
+                    <button onclick="handleAuth()" style="
+                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        font-weight: 600;
+                    ">Iniciar Sesión</button>
+                `;
+                document.getElementById('writeSection').style.display = 'none';
+                document.getElementById('lettersList').innerHTML = '';
+            }
+        });
+
+        async function saveLetter(content) {
+            if (!currentUser || !content.trim()) return;
+
+            try {
+                const letterData = {
+                    content: content,
+                    timestamp: Date.now(),
+                    authorId: currentUser.uid,
+                    authorName: currentUser.displayName
+                };
+
+                const lettersRef = ref(database, 'letters');
+                await push(lettersRef, letterData);
+
+                document.getElementById('letterContent').value = '';
+                loadLetters();
+            } catch (error) {
+                console.error('Error al guardar la carta:', error);
+                alert('Error al guardar la carta: ' + error.message);
+            }
+        }
+
+        function loadLetters() {
+            if (!currentUser) return;
+
+            const lettersContainer = document.getElementById('lettersList');
+            lettersContainer.innerHTML = '';
+
+            const lettersRef = ref(database, 'letters');
+            onValue(lettersRef, (snapshot) => {
+                const letters = snapshot.val() || {};
+                lettersContainer.innerHTML = '';
+
+                Object.values(letters).reverse().forEach(letter => {
+                    const letterCard = document.createElement('div');
+                    letterCard.className = 'letter-card';
+                    letterCard.innerHTML = `
+                        <div class="letter-content">${letter.content}</div>
+                        <div class="letter-info">
+                            <p class="letter-author">Con amor, ${letter.authorName}</p>
+                            <p class="letter-date">${new Date(letter.timestamp).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                    lettersContainer.appendChild(letterCard);
+                });
+            });
+        }
+
+        window.saveLetter = () => {
+            const content = document.getElementById('letterContent').value;
+            if (!content.trim()) {
+                alert('Por favor escribe algo en tu carta 💌');
+                return;
+            }
+            saveLetter(content);
+        };
+
+        // Inicializar
+        if (auth.currentUser) {
+            loadLetters();
+        }
+    </script>
     <style>
         :root {
             --primary-color: #ff69b4;
@@ -219,9 +328,8 @@
     <div class="letters-container">
         <div class="write-section" id="writeSection" style="display: none;">
             <h2>Escribe una Carta de Amor 💝</h2>
-            <input type="text" id="letterTitle" class="letter-title" placeholder="Título de tu carta...">
             <textarea id="letterContent" class="letter-content" placeholder="Escribe aquí tu carta de amor..."></textarea>
-            <button class="send-button" onclick="sendLetter()">Enviar Carta 💌</button>
+            <button class="send-button" onclick="saveLetter()">Enviar Carta 💌</button>
         </div>
 
         <div class="loading" id="loading">
@@ -231,123 +339,5 @@
 
         <div class="letters-list" id="lettersList"></div>
     </div>
-
-    <script type="module">
-        import { 
-            auth, 
-            database,
-            ref,
-            set,
-            get,
-            onAuthStateChanged
-        } from './js/firebase-init.js';
-
-        let currentUser = null;
-        const loginBtn = document.getElementById('loginBtn');
-
-        // Auth state observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loginBtn.textContent = 'Cerrar Sesión';
-                loginBtn.onclick = () => window.handleSignOut();
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-                loadLetters();
-            } else {
-                currentUser = null;
-                loginBtn.textContent = 'Iniciar Sesión';
-                loginBtn.onclick = () => window.handleAuth();
-                document.getElementById('userInfo').innerHTML = `
-                    <p>Por favor inicia sesión para ver las cartas 💝</p>
-                    <button onclick="handleAuth()" style="
-                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-                        color: white;
-                        border: none;
-                        padding: 12px 25px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        margin-top: 10px;
-                        font-weight: 600;
-                    ">Iniciar Sesión</button>
-                `;
-            }
-        });
-
-        window.sendLetter = async () => {
-            if (!currentUser) return;
-
-            const titleInput = document.getElementById('letterTitle');
-            const contentInput = document.getElementById('letterContent');
-            const title = titleInput.value.trim();
-            const content = contentInput.value.trim();
-
-            if (!title || !content) {
-                alert('Por favor escribe un título y contenido para tu carta 💌');
-                return;
-            }
-
-            try {
-                const timestamp = Date.now();
-                const letterData = {
-                    title,
-                    content,
-                    timestamp,
-                    authorName: currentUser.displayName,
-                    authorId: currentUser.uid
-                };
-
-                await set(ref(database, `letters/${timestamp}`), letterData);
-
-                // Limpiar formulario
-                titleInput.value = '';
-                contentInput.value = '';
-
-                // Recargar cartas
-                loadLetters();
-                
-                alert('¡Carta enviada con éxito! 💌');
-            } catch (error) {
-                console.error('Error al enviar carta:', error);
-                alert('Error al enviar carta: ' + error.message);
-            }
-        };
-
-        async function loadLetters() {
-            if (!currentUser) return;
-
-            const lettersContainer = document.getElementById('lettersList');
-            lettersContainer.innerHTML = '';
-
-            try {
-                const lettersRef = ref(database, 'letters');
-                const snapshot = await get(lettersRef);
-                const letters = snapshot.val() || {};
-
-                // Convertir objeto a array y ordenar por timestamp
-                const lettersArray = Object.values(letters).sort((a, b) => b.timestamp - a.timestamp);
-
-                lettersArray.forEach(letter => {
-                    const letterCard = document.createElement('div');
-                    letterCard.className = 'letter-card letter-decoration';
-                    
-                    letterCard.innerHTML = `
-                        <div class="letter-header">
-                            <h3 class="letter-title">${letter.title}</h3>
-                            <div class="letter-meta">
-                                <span class="letter-author">De ${letter.authorName}</span>
-                                <span class="letter-date">${new Date(letter.timestamp).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                        <div class="letter-content">${letter.content}</div>
-                    `;
-                    
-                    lettersContainer.appendChild(letterCard);
-                });
-            } catch (error) {
-                console.error('Error al cargar cartas:', error);
-                alert('Error al cargar cartas: ' + error.message);
-            }
-        }
-    </script>
 </body>
 </html>
