@@ -1,6 +1,6 @@
 // Import Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -29,9 +29,10 @@ const provider = new GoogleAuthProvider();
 async function handleAuth() {
     try {
         const result = await signInWithPopup(auth, provider);
+        console.log("Usuario autenticado:", result.user.displayName);
         return result.user;
     } catch (error) {
-        console.error(error);
+        console.error("Error de autenticación:", error);
         alert('Error al iniciar sesión');
     }
 }
@@ -39,8 +40,9 @@ async function handleAuth() {
 async function handleSignOut() {
     try {
         await auth.signOut();
+        console.log("Sesión cerrada");
     } catch (error) {
-        console.error(error);
+        console.error("Error al cerrar sesión:", error);
         alert('Error al cerrar sesión');
     }
 }
@@ -55,5 +57,6 @@ export {
     database,
     storage,
     handleAuth,
-    handleSignOut
+    handleSignOut,
+    onAuthStateChanged
 };
