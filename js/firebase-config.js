@@ -10,12 +10,14 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-if (!firebase.apps.length) {
-    try {
+try {
+    if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
-    } catch (error) {
-        console.error("Error inicializando Firebase:", error);
+    } else {
+        firebase.app();
     }
+} catch (error) {
+    console.error("Error inicializando Firebase:", error);
 }
 
 const auth = firebase.auth();
@@ -29,7 +31,10 @@ function handleAuth() {
         prompt: 'select_account'
     });
     
-    auth.signInWithPopup(provider)
+    return auth.signInWithPopup(provider)
+        .then((result) => {
+            console.log("Autenticación exitosa:", result.user.displayName);
+        })
         .catch(error => {
             console.error('Error de autenticación:', error);
             alert('Error al iniciar sesión: ' + error.message);
