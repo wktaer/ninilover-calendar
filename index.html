@@ -43,25 +43,59 @@
 
         // Función para registrar con email
         window.registerWithEmail = () => {
-            const email = document.getElementById('emailInput').value;
+            const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
+            
+            if (!email || !password) {
+                alert('Por favor, completa todos los campos');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
             
             auth.createUserWithEmailAndPassword(email, password)
                 .then(() => {
                     document.getElementById('loginModal').style.display = 'none';
+                    loadUserData(); // Cargar datos del usuario después del registro
                 })
                 .catch((error) => {
-                    alert('Error: ' + error.message);
+                    let errorMessage = 'Error al registrar: ';
+                    switch (error.code) {
+                        case 'auth/invalid-email':
+                            errorMessage += 'El correo electrónico no es válido';
+                            break;
+                        case 'auth/email-already-in-use':
+                            errorMessage += 'Este correo ya está registrado';
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    alert(errorMessage);
                 });
         };
 
         // Función para autenticación con teléfono
         window.requestOTP = () => {
-            const phoneNumber = document.getElementById('phoneInput').value;
+            const phoneNumber = document.getElementById('phoneInput').value.trim();
             
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                'size': 'invisible'
-            });
+            if (!phoneNumber) {
+                alert('Por favor, ingresa un número de teléfono');
+                return;
+            }
+
+            if (!phoneNumber.startsWith('+')) {
+                alert('El número debe incluir el código de país (ejemplo: +56912345678)');
+                return;
+            }
+            
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    'size': 'invisible'
+                });
+            }
             
             auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
                 .then((confirmationResult) => {
@@ -69,7 +103,15 @@
                     document.getElementById('otpDiv').style.display = 'block';
                 })
                 .catch((error) => {
-                    alert('Error: ' + error.message);
+                    let errorMessage = 'Error: ';
+                    switch (error.code) {
+                        case 'auth/invalid-phone-number':
+                            errorMessage += 'Número de teléfono inválido';
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    alert(errorMessage);
                 });
         };
 
@@ -113,6 +155,17 @@
                 });
         };
 
+        // Función para cargar datos del usuario
+        function loadUserData() {
+            const user = auth.currentUser;
+            if (user) {
+                // Cargar calendario y otros datos
+                loadCalendarEvents();
+                loadMemories();
+                loadLetters();
+            }
+        }
+
         // Observar cambios en la autenticación
         auth.onAuthStateChanged((user) => {
             const loginBtn = document.getElementById('loginBtn');
@@ -125,6 +178,7 @@
                 loginBtn.textContent = 'Cerrar Sesión';
                 loginBtn.onclick = handleSignOut;
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName || user.email || user.phoneNumber}! 💖`;
+                loadUserData(); // Cargar datos cuando el usuario inicia sesión
             } else {
                 console.log('Usuario no conectado');
                 loginBtn.textContent = 'Iniciar Sesión';
