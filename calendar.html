@@ -273,7 +273,14 @@
     </div>
 
     <script type="module">
-        import { auth, database } from './js/firebase-init.js';
+        import { 
+            auth, 
+            database,
+            ref,
+            set,
+            onValue,
+            onAuthStateChanged
+        } from './js/firebase-init.js';
 
         let currentUser = null;
         let currentYear = new Date().getFullYear();
@@ -288,7 +295,7 @@
         const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
         // Auth state observer
-        auth.onAuthStateChanged((user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
@@ -365,7 +372,7 @@
             }
         }
 
-        function prevMonth() {
+        window.prevMonth = () => {
             currentMonth--;
             if (currentMonth < 0) {
                 currentMonth = 11;
@@ -374,7 +381,7 @@
             renderCalendar();
         };
 
-        function nextMonth() {
+        window.nextMonth = () => {
             currentMonth++;
             if (currentMonth > 11) {
                 currentMonth = 0;
@@ -398,32 +405,29 @@
             dateDisplay.textContent = `${day} de ${months[currentMonth]} del ${currentYear}`;
             modal.style.display = 'block';
             
-            const notesRef = database.ref(`notes/${dateKey}`);
-            notesRef.on('value', (snapshot) => {
+            const notesRef = ref(database, `notes/${dateKey}`);
+            onValue(notesRef, (snapshot) => {
                 const notes = snapshot.val() || {};
                 notesDisplay.innerHTML = '';
                 
                 Object.entries(notes).forEach(([key, note]) => {
                     const noteElement = document.createElement('div');
-                    noteElement.className = 'note-card';
+                    noteElement.className = 'note-item';
                     noteElement.innerHTML = `
-                        <div class="note-author">${note.authorName}</div>
-                        <div class="note-content">${note.content}</div>
-                        <div class="note-timestamp">${new Date(note.timestamp).toLocaleString()}</div>
+                        <p class="note-content">${note.content}</p>
+                        <p class="note-author">Por ${note.authorName}</p>
+                        <p class="note-time">${new Date(note.timestamp).toLocaleTimeString()}</p>
                     `;
                     notesDisplay.appendChild(noteElement);
                 });
             });
         }
 
-        function closeNoteModal() {
+        window.closeNoteModal = () => {
             document.getElementById('noteModal').style.display = 'none';
-            const dateKey = `${currentYear}-${currentMonth + 1}-${selectedDate}`;
-            const notesRef = database.ref(`notes/${dateKey}`);
-            notesRef.off();
         };
 
-        function addNote() {
+        window.addNote = async () => {
             if (!currentUser) return;
             
             const noteInput = document.getElementById('noteInput');
@@ -438,14 +442,13 @@
                     timestamp: Date.now()
                 };
                 
-                database.ref(`notes/${dateKey}`).push(noteData)
-                    .then(() => {
-                        noteInput.value = '';
-                    })
-                    .catch(error => {
-                        console.error('Error al guardar la nota:', error);
-                        alert('Error al guardar la nota: ' + error.message);
-                    });
+                try {
+                    await set(ref(database, `notes/${dateKey}/${Date.now()}`), noteData);
+                    noteInput.value = '';
+                } catch (error) {
+                    console.error('Error al guardar la nota:', error);
+                    alert('Error al guardar la nota: ' + error.message);
+                }
             }
         };
 

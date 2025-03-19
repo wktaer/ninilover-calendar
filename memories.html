@@ -213,18 +213,34 @@
     </div>
 
     <script type="module">
-        import { auth, storage, database } from './js/firebase-init.js';
+        import { 
+            auth, 
+            storage, 
+            database,
+            ref,
+            set,
+            get,
+            storageRef,
+            uploadBytes,
+            getDownloadURL,
+            onAuthStateChanged
+        } from './js/firebase-init.js';
 
         let currentUser = null;
+        const loginBtn = document.getElementById('loginBtn');
 
         // Auth state observer
-        auth.onAuthStateChanged((user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                loginBtn.textContent = 'Cerrar Sesión';
+                loginBtn.onclick = () => window.handleSignOut();
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
                 loadMemories();
             } else {
                 currentUser = null;
+                loginBtn.textContent = 'Iniciar Sesión';
+                loginBtn.onclick = () => window.handleAuth();
                 document.getElementById('userInfo').innerHTML = `
                     <p>Por favor inicia sesión para ver los recuerdos 💝</p>
                     <button onclick="handleAuth()" style="
@@ -256,11 +272,11 @@
 
             try {
                 const timestamp = Date.now();
-                const storageRef = storage.ref(`memories/${currentUser.uid}/${timestamp}_${file.name}`);
+                const imageRef = storageRef(storage, `memories/${currentUser.uid}/${timestamp}_${file.name}`);
                 
                 // Subir imagen
-                await storageRef.put(file);
-                const imageUrl = await storageRef.getDownloadURL();
+                await uploadBytes(imageRef, file);
+                const imageUrl = await getDownloadURL(imageRef);
 
                 // Guardar datos en la base de datos
                 const memoryData = {
@@ -271,14 +287,17 @@
                     authorId: currentUser.uid
                 };
 
-                await database.ref(`memories/${timestamp}`).set(memoryData);
+                await set(ref(database, `memories/${timestamp}`), memoryData);
 
                 // Limpiar formulario
                 fileInput.value = '';
                 descriptionInput.value = '';
+                document.getElementById('imagePreview').style.display = 'none';
                 
                 // Recargar memorias
                 loadMemories();
+                
+                alert('¡Recuerdo guardado con éxito! 💖');
             } catch (error) {
                 console.error('Error al subir memoria:', error);
                 alert('Error al subir memoria: ' + error.message);
@@ -292,8 +311,8 @@
             memoriesGrid.innerHTML = '';
 
             try {
-                const memoriesRef = database.ref('memories');
-                const snapshot = await memoriesRef.once('value');
+                const memoriesRef = ref(database, 'memories');
+                const snapshot = await get(memoriesRef);
                 const memories = snapshot.val() || {};
 
                 // Convertir objeto a array y ordenar por timestamp

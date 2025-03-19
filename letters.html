@@ -233,19 +233,30 @@
     </div>
 
     <script type="module">
-        import { auth, database } from './js/firebase-init.js';
+        import { 
+            auth, 
+            database,
+            ref,
+            set,
+            get,
+            onAuthStateChanged
+        } from './js/firebase-init.js';
 
         let currentUser = null;
+        const loginBtn = document.getElementById('loginBtn');
 
         // Auth state observer
-        auth.onAuthStateChanged((user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                loginBtn.textContent = 'Cerrar Sesión';
+                loginBtn.onclick = () => window.handleSignOut();
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-                document.getElementById('writeSection').style.display = 'block';
                 loadLetters();
             } else {
                 currentUser = null;
+                loginBtn.textContent = 'Iniciar Sesión';
+                loginBtn.onclick = () => window.handleAuth();
                 document.getElementById('userInfo').innerHTML = `
                     <p>Por favor inicia sesión para ver las cartas 💝</p>
                     <button onclick="handleAuth()" style="
@@ -259,8 +270,6 @@
                         font-weight: 600;
                     ">Iniciar Sesión</button>
                 `;
-                document.getElementById('writeSection').style.display = 'none';
-                document.getElementById('lettersList').innerHTML = '';
             }
         });
 
@@ -287,7 +296,7 @@
                     authorId: currentUser.uid
                 };
 
-                await database.ref(`letters/${timestamp}`).set(letterData);
+                await set(ref(database, `letters/${timestamp}`), letterData);
 
                 // Limpiar formulario
                 titleInput.value = '';
@@ -295,6 +304,8 @@
 
                 // Recargar cartas
                 loadLetters();
+                
+                alert('¡Carta enviada con éxito! 💌');
             } catch (error) {
                 console.error('Error al enviar carta:', error);
                 alert('Error al enviar carta: ' + error.message);
@@ -308,8 +319,8 @@
             lettersContainer.innerHTML = '';
 
             try {
-                const lettersRef = database.ref('letters');
-                const snapshot = await lettersRef.once('value');
+                const lettersRef = ref(database, 'letters');
+                const snapshot = await get(lettersRef);
                 const letters = snapshot.val() || {};
 
                 // Convertir objeto a array y ordenar por timestamp
@@ -317,7 +328,7 @@
 
                 lettersArray.forEach(letter => {
                     const letterCard = document.createElement('div');
-                    letterCard.className = 'letter-card';
+                    letterCard.className = 'letter-card letter-decoration';
                     
                     letterCard.innerHTML = `
                         <div class="letter-header">
@@ -336,11 +347,6 @@
                 console.error('Error al cargar cartas:', error);
                 alert('Error al cargar cartas: ' + error.message);
             }
-        }
-
-        function handleAuth() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
         }
     </script>
 </body>

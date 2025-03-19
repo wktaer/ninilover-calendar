@@ -169,7 +169,7 @@
         <img src="https://clipart-library.com/images/8TxrBGEac.png" alt="Hello Kitty" class="logo">
         <div class="clock" id="clock">00:00:00</div>
         <div id="userInfo"></div>
-        <button id="loginBtn" onclick="handleAuth()">Iniciar Sesión</button>
+        <button id="loginBtn">Iniciar Sesión</button>
     </header>
 
     <div class="daily-message">
@@ -205,9 +205,10 @@
     </div>
 
     <script type="module">
-        import { auth } from './js/firebase-init.js';
+        import { auth, onAuthStateChanged } from './js/firebase-init.js';
 
         let currentUser = null;
+        const loginBtn = document.getElementById('loginBtn');
 
         // Actualizar reloj
         function updateClock() {
@@ -235,14 +236,16 @@
         updateDailyMessage();
 
         // Auth state observer
-        auth.onAuthStateChanged((user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
+                loginBtn.textContent = 'Cerrar Sesión';
+                loginBtn.onclick = () => window.handleSignOut();
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
             } else {
                 currentUser = null;
-                document.getElementById('loginBtn').textContent = 'Iniciar Sesión';
+                loginBtn.textContent = 'Iniciar Sesión';
+                loginBtn.onclick = () => window.handleAuth();
                 document.getElementById('userInfo').textContent = '';
             }
         });
