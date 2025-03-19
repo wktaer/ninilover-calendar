@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NiniLover - Cartas de Amor 💌</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #ff69b4;
+            --secondary-color: #ffb6c1;
+            --background-color: #fff0f5;
+            --text-color: #4a4a4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #ff69b4, #ffb6c1);
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--primary-color);
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+
+        .letters-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .write-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .letter-title {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid var(--secondary-color);
+            border-radius: 10px;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.2em;
+        }
+
+        .letter-content {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid var(--secondary-color);
+            border-radius: 10px;
+            min-height: 200px;
+            resize: vertical;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .letters-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .letter-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .letter-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .letter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+
+        .letter-author {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .letter-date {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .letter-body {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--background-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .letter-decoration {
+            position: relative;
+        }
+
+        .letter-decoration::before {
+            content: '💌';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            font-size: 1.5em;
+            transform: rotate(-15deg);
+        }
+
+        @media (max-width: 600px) {
+            .back-button {
+                top: 20px;
+                left: 20px;
+            }
+
+            .letters-container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="location.href='index.html'">
+        ← Volver
+    </button>
+
+    <div class="header">
+        <h1>Cartas de Amor 💌</h1>
+        <div id="userInfo"></div>
+    </div>
+
+    <div class="letters-container">
+        <div class="write-section" id="writeSection" style="display: none;">
+            <h2>Escribe una Carta de Amor 💝</h2>
+            <input type="text" id="letterTitle" class="letter-title" placeholder="Título de tu carta...">
+            <textarea id="letterContent" class="letter-content" placeholder="Escribe aquí tu carta de amor..."></textarea>
+            <button class="send-button" onclick="sendLetter()">Enviar Carta 💌</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Cargando cartas...</p>
+        </div>
+
+        <div class="letters-list" id="lettersList"></div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
+            authDomain: "ninilover-calendar.firebaseapp.com",
+            databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
+            projectId: "ninilover-calendar",
+            storageBucket: "ninilover-calendar.appspot.com",
+            messagingSenderId: "1063597046269",
+            appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        let currentUser = null;
+
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+                document.getElementById('writeSection').style.display = 'block';
+                loadLetters();
+            } else {
+                currentUser = null;
+                document.getElementById('userInfo').innerHTML = `
+                    <p>Por favor inicia sesión para ver las cartas 💝</p>
+                    <button onclick="handleAuth()" style="
+                        background: white;
+                        color: var(--primary-color);
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        font-weight: 600;
+                    ">Iniciar Sesión</button>
+                `;
+                document.getElementById('writeSection').style.display = 'none';
+                document.getElementById('lettersList').innerHTML = '';
+            }
+        });
+
+        // Autenticación
+        function handleAuth() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        }
+
+        // Cargar cartas
+        function loadLetters() {
+            const loading = document.getElementById('loading');
+            const lettersList = document.getElementById('lettersList');
+            
+            loading.style.display = 'block';
+            lettersList.innerHTML = '';
+
+            database.ref('letters').on('value', (snapshot) => {
+                loading.style.display = 'none';
+                lettersList.innerHTML = '';
+                
+                const letters = snapshot.val() || {};
+                Object.entries(letters).reverse().forEach(([key, letter]) => {
+                    const card = document.createElement('div');
+                    card.className = 'letter-card letter-decoration';
+                    
+                    card.innerHTML = `
+                        <div class="letter-header">
+                            <h3>${letter.title}</h3>
+                            <div class="letter-date">${new Date(letter.timestamp).toLocaleDateString()}</div>
+                        </div>
+                        <div class="letter-body">${letter.content}</div>
+                        <div class="letter-author">Con amor, ${letter.authorName}</div>
+                    `;
+                    
+                    lettersList.appendChild(card);
+                });
+            });
+        }
+
+        // Enviar carta
+        async function sendLetter() {
+            if (!currentUser) return;
+
+            const titleInput = document.getElementById('letterTitle');
+            const contentInput = document.getElementById('letterContent');
+            
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            if (!title || !content) {
+                alert('Por favor escribe un título y el contenido de tu carta 💝');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            try {
+                const letterData = {
+                    title,
+                    content,
+                    authorName: currentUser.displayName,
+                    authorId: currentUser.uid,
+                    timestamp: Date.now()
+                };
+
+                await database.ref('letters').push(letterData);
+
+                // Limpiar formulario
+                titleInput.value = '';
+                contentInput.value = '';
+                loading.style.display = 'none';
+                alert('¡Carta enviada con éxito! 💌');
+
+            } catch (error) {
+                console.error('Error al enviar la carta:', error);
+                alert('Error al enviar la carta: ' + error.message);
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
