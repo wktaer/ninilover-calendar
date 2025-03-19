@@ -348,6 +348,78 @@
                 opacity: 0;
             }
         }
+
+        /* Add new responsive design rules */
+        @media screen and (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                padding: 10px;
+            }
+
+            .menu-item {
+                padding: 20px;
+            }
+
+            .menu-item i {
+                font-size: 2em;
+            }
+
+            .menu-item h3 {
+                font-size: 1em;
+            }
+
+            .modal-content {
+                width: 90%;
+                max-width: 300px;
+            }
+
+            #loginBtn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+
+            .clock {
+                font-size: 1em;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .daily-message {
+                margin: 15px 0;
+                padding: 15px;
+            }
+
+            .heart {
+                width: 15px;
+                height: 15px;
+            }
+
+            .heart::before,
+            .heart::after {
+                width: 15px;
+                height: 15px;
+            }
+        }
     </style>
 </head>
 <body>
