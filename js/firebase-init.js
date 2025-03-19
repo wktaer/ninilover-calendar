@@ -30,12 +30,17 @@ provider.setCustomParameters({
 // Función de autenticación
 async function handleAuth() {
     try {
+        console.log("Iniciando autenticación...");
         const result = await signInWithPopup(auth, provider);
         console.log("Autenticación exitosa:", result.user.displayName);
         return result.user;
     } catch (error) {
         console.error('Error de autenticación:', error);
-        alert('Error al iniciar sesión: ' + error.message);
+        if (error.code === 'auth/unauthorized-domain') {
+            alert('Este dominio no está autorizado. Por favor, agrega https://wktaer.github.io a los dominios autorizados en Firebase.');
+        } else {
+            alert('Error al iniciar sesión: ' + error.message);
+        }
         throw error;
     }
 }
