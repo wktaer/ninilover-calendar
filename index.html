@@ -466,6 +466,7 @@
 
     <div class="modal" id="loginModal">
         <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
             <h2>Iniciar Sesión</h2>
             <div class="login-options">
                 <button onclick="showEmailLogin()">Iniciar Sesión con Email</button>
@@ -589,6 +590,11 @@
                 .catch(() => {
                     alert('Código inválido');
                 });
+        };
+
+        // Agregar esta función para cerrar el modal
+        window.closeModal = () => {
+            document.getElementById('loginModal').style.display = 'none';
         };
     </script>
 </body>
