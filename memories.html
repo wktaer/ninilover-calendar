@@ -6,8 +6,137 @@
     <title>NiniLover - Recuerdos 💖</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
-    <script type="module" src="js/firebase-init.js"></script>
-    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
+            authDomain: "ninilover-app.firebaseapp.com",
+            projectId: "ninilover-app",
+            storageBucket: "ninilover-app.appspot.com",
+            messagingSenderId: "1067612365943",
+            appId: "1:1067612365943:web:52cefbd8a8691987e7c3e",
+            measurementId: "G-JR18EWKJFB",
+            databaseURL: "https://ninilover-app-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const storage = getStorage(app);
+        let currentUser = null;
+
+        // Observar cambios en la autenticación
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+                document.getElementById('uploadSection').style.display = 'block';
+                loadMemories();
+            } else {
+                document.getElementById('userInfo').innerHTML = `
+                    <p>Por favor inicia sesión para ver los recuerdos 💝</p>
+                    <button onclick="handleAuth()" style="
+                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        font-weight: 600;
+                    ">Iniciar Sesión</button>
+                `;
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('memoriesGrid').innerHTML = '';
+            }
+        });
+
+        async function uploadMemory(file, description) {
+            if (!currentUser || !file) return;
+
+            try {
+                const fileRef = storageRef(storage, `memories/${Date.now()}_${file.name}`);
+                await uploadBytes(fileRef, file);
+                const downloadURL = await getDownloadURL(fileRef);
+
+                const memoryData = {
+                    imageUrl: downloadURL,
+                    description: description,
+                    timestamp: Date.now(),
+                    authorId: currentUser.uid,
+                    authorName: currentUser.displayName
+                };
+
+                const memoriesRef = ref(database, 'memories');
+                await push(memoriesRef, memoryData);
+
+                document.getElementById('memoryDescription').value = '';
+                document.getElementById('memoryFile').value = '';
+                
+                loadMemories();
+            } catch (error) {
+                console.error('Error al subir el recuerdo:', error);
+                alert('Error al subir el recuerdo: ' + error.message);
+            }
+        }
+
+        async function loadMemories() {
+            if (!currentUser) return;
+
+            const memoriesGrid = document.getElementById('memoriesGrid');
+            memoriesGrid.innerHTML = '';
+
+            const memoriesRef = ref(database, 'memories');
+            onValue(memoriesRef, (snapshot) => {
+                const memories = snapshot.val() || {};
+                memoriesGrid.innerHTML = '';
+
+                Object.values(memories).reverse().forEach(memory => {
+                    const memoryCard = document.createElement('div');
+                    memoryCard.className = 'memory-card';
+                    memoryCard.innerHTML = `
+                        <img src="${memory.imageUrl}" alt="Recuerdo" loading="lazy">
+                        <div class="memory-info">
+                            <p class="memory-description">${memory.description}</p>
+                            <p class="memory-author">Por ${memory.authorName}</p>
+                            <p class="memory-date">${new Date(memory.timestamp).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                    memoriesGrid.appendChild(memoryCard);
+                });
+            });
+        }
+
+        window.handleFileUpload = () => {
+            const fileInput = document.getElementById('memoryFile');
+            const descriptionInput = document.getElementById('memoryDescription');
+            const file = fileInput.files[0];
+            const description = descriptionInput.value.trim();
+
+            if (!file) {
+                alert('Por favor selecciona una imagen 🖼️');
+                return;
+            }
+
+            if (!description) {
+                alert('Por favor agrega una descripción 📝');
+                return;
+            }
+
+            uploadMemory(file, description);
+        };
+
+        // Inicializar
+        if (auth.currentUser) {
+            loadMemories();
+        }
+    </script>
     <style>
         :root {
             --primary-color: #ff69b4;
@@ -199,9 +328,9 @@
     <div class="memories-container">
         <div class="upload-section" id="uploadSection" style="display: none;">
             <h2>Agregar un Nuevo Recuerdo 💖</h2>
-            <input type="file" id="imageInput" accept="image/*" style="display: none;">
-            <textarea id="descriptionInput" class="memory-description" placeholder="Describe este hermoso momento..."></textarea>
-            <button class="upload-button" onclick="uploadMemory()">Guardar Recuerdo 💝</button>
+            <input type="file" id="memoryFile" accept="image/*">
+            <textarea id="memoryDescription" class="memory-description" placeholder="Describe este hermoso momento..."></textarea>
+            <button class="upload-button" onclick="handleFileUpload()">Guardar Recuerdo 💝</button>
         </div>
 
         <div class="loading" id="loading">
@@ -211,146 +340,5 @@
 
         <div class="memories-grid" id="memoriesGrid"></div>
     </div>
-
-    <script type="module">
-        import { 
-            auth, 
-            storage, 
-            database,
-            ref,
-            set,
-            get,
-            storageRef,
-            uploadBytes,
-            getDownloadURL,
-            onAuthStateChanged
-        } from './js/firebase-init.js';
-
-        let currentUser = null;
-        const loginBtn = document.getElementById('loginBtn');
-
-        // Auth state observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loginBtn.textContent = 'Cerrar Sesión';
-                loginBtn.onclick = () => window.handleSignOut();
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-                loadMemories();
-            } else {
-                currentUser = null;
-                loginBtn.textContent = 'Iniciar Sesión';
-                loginBtn.onclick = () => window.handleAuth();
-                document.getElementById('userInfo').innerHTML = `
-                    <p>Por favor inicia sesión para ver los recuerdos 💝</p>
-                    <button onclick="handleAuth()" style="
-                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-                        color: white;
-                        border: none;
-                        padding: 12px 25px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        margin-top: 10px;
-                        font-weight: 600;
-                    ">Iniciar Sesión</button>
-                `;
-            }
-        });
-
-        window.uploadMemory = async () => {
-            if (!currentUser) return;
-
-            const fileInput = document.getElementById('imageInput');
-            const descriptionInput = document.getElementById('descriptionInput');
-            const file = fileInput.files[0];
-            const description = descriptionInput.value.trim();
-
-            if (!file || !description) {
-                alert('Por favor selecciona una imagen y escribe una descripción 💝');
-                return;
-            }
-
-            try {
-                const timestamp = Date.now();
-                const imageRef = storageRef(storage, `memories/${currentUser.uid}/${timestamp}_${file.name}`);
-                
-                // Subir imagen
-                await uploadBytes(imageRef, file);
-                const imageUrl = await getDownloadURL(imageRef);
-
-                // Guardar datos en la base de datos
-                const memoryData = {
-                    imageUrl,
-                    description,
-                    timestamp,
-                    authorName: currentUser.displayName,
-                    authorId: currentUser.uid
-                };
-
-                await set(ref(database, `memories/${timestamp}`), memoryData);
-
-                // Limpiar formulario
-                fileInput.value = '';
-                descriptionInput.value = '';
-                document.getElementById('imagePreview').style.display = 'none';
-                
-                // Recargar memorias
-                loadMemories();
-                
-                alert('¡Recuerdo guardado con éxito! 💖');
-            } catch (error) {
-                console.error('Error al subir memoria:', error);
-                alert('Error al subir memoria: ' + error.message);
-            }
-        };
-
-        async function loadMemories() {
-            if (!currentUser) return;
-
-            const memoriesGrid = document.getElementById('memoriesGrid');
-            memoriesGrid.innerHTML = '';
-
-            try {
-                const memoriesRef = ref(database, 'memories');
-                const snapshot = await get(memoriesRef);
-                const memories = snapshot.val() || {};
-
-                // Convertir objeto a array y ordenar por timestamp
-                const memoriesArray = Object.values(memories).sort((a, b) => b.timestamp - a.timestamp);
-
-                memoriesArray.forEach(memory => {
-                    const memoryCard = document.createElement('div');
-                    memoryCard.className = 'memory-card';
-                    
-                    memoryCard.innerHTML = `
-                        <img src="${memory.imageUrl}" alt="Recuerdo" loading="lazy">
-                        <div class="memory-info">
-                            <p class="memory-description">${memory.description}</p>
-                            <p class="memory-author">Por ${memory.authorName}</p>
-                            <p class="memory-date">${new Date(memory.timestamp).toLocaleDateString()}</p>
-                        </div>
-                    `;
-                    
-                    memoriesGrid.appendChild(memoryCard);
-                });
-            } catch (error) {
-                console.error('Error al cargar memorias:', error);
-                alert('Error al cargar memorias: ' + error.message);
-            }
-        }
-
-        // Preview de imagen
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').src = e.target.result;
-                    document.getElementById('imagePreview').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
 </body>
 </html>
