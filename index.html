@@ -599,3 +599,311 @@
     </script>
 </body>
 </html>
+
+<style>
+    /* Add to your existing styles */
+    .love-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+
+    .feature-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .mood-options {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .mood-btn {
+        font-size: 1.5em;
+        padding: 10px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--primary-color);
+        background: white;
+        transition: transform 0.3s ease;
+    }
+
+    .mood-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .goals-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin: 15px 0;
+    }
+
+    .goal-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin: 5px 0;
+        background: var(--background-color);
+        border-radius: 10px;
+    }
+
+    .quote-text {
+        font-style: italic;
+        margin: 20px 0;
+        padding: 15px;
+        background: var(--background-color);
+        border-radius: 10px;
+    }
+
+    .anniversary-reminder {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        padding: 15px;
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        display: none;
+    }
+
+    @media screen and (max-width: 768px) {
+        .love-features {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Add after the next-meeting div and before menu-grid -->
+<div class="love-features">
+    <div class="feature-card mood-tracker">
+        <h3>💝 Nuestro Estado de Ánimo</h3>
+        <div class="mood-options">
+            <button onclick="updateMood('feliz')" class="mood-btn">😊</button>
+            <button onclick="updateMood('enamorado')" class="mood-btn">🥰</button>
+            <button onclick="updateMood('extrañando')" class="mood-btn">🥺</button>
+            <button onclick="updateMood('pensativo')" class="mood-btn">🤔</button>
+        </div>
+        <p id="currentMood">Tu estado: --</p>
+        <p id="partnerMood">Su estado: --</p>
+    </div>
+
+    <div class="feature-card shared-goals">
+        <h3>✨ Nuestras Metas Juntos</h3>
+        <div class="goals-list" id="goalsList">
+            <!-- Goals will be added here -->
+        </div>
+        <div class="add-goal-form">
+            <input type="text" id="newGoal" placeholder="Nueva meta juntos...">
+            <button onclick="addGoal()">Agregar 💫</button>
+        </div>
+    </div>
+
+    <div class="feature-card love-quotes">
+        <h3>💌 Frases de Amor</h3>
+        <div id="quoteDisplay" class="quote-text"></div>
+        <button onclick="generateQuote()" class="quote-btn">Nueva Frase 💕</button>
+    </div>
+</div>
+
+<!-- Add before closing body tag -->
+<div class="anniversary-reminder" id="anniversaryReminder"></div>
+
+
+    <div class="next-meeting">
+        <h2>Próximo Encuentro 🥰</h2>
+        <div id="nextMeetingCounter">Calculando...</div>
+    </div>
+
+    <!-- Add this before closing body tag -->
+    <div class="floating-message" onclick="showRandomLoveMessage()">
+        💌 Click para un mensaje especial
+    </div>
+
+    <script>
+        // Add to your existing script section
+        const romanticQuotes = [
+            "En la distancia, nuestro amor crece más fuerte cada día 🌱",
+            "Cada estrella en el cielo me recuerda a ti ⭐",
+            "Eres mi primer y último pensamiento cada día 💭",
+            "Contigo, cada día es San Valentín 💝",
+            "Tu amor me hace mejor persona cada día 🦋",
+            "Eres el sueño que nunca quiero despertar 💫",
+            "Mi corazón es tuyo, hoy y siempre 💖",
+            "Juntos escribimos nuestra historia de amor perfecta 📖"
+        ];
+    
+        const goals = [
+            "Viajar juntos a un lugar especial 🌎",
+            "Crear nuestro álbum de recuerdos 📸",
+            "Tener una cena romántica virtual 🍝",
+            "Aprender algo nuevo juntos 📚"
+        ];
+    
+        function generateQuote() {
+            const quoteDisplay = document.getElementById('quoteDisplay');
+            const randomQuote = romanticQuotes[Math.floor(Math.random() * romanticQuotes.length)];
+            quoteDisplay.textContent = randomQuote;
+        }
+    
+        function updateMood(mood) {
+            const user = auth.currentUser;
+            if (user) {
+                // Update mood in Firebase
+                database.ref(`users/${user.uid}/mood`).set({
+                    mood: mood,
+                    timestamp: Date.now()
+                });
+                document.getElementById('currentMood').textContent = `Tu estado: ${getMoodEmoji(mood)}`;
+                
+                // Listen to partner's mood changes
+                const partnerId = user.uid === 'user1Id' ? 'user2Id' : 'user1Id'; // Replace with actual partner ID
+                database.ref(`users/${partnerId}/mood`).on('value', (snapshot) => {
+                    const partnerMood = snapshot.val();
+                    if (partnerMood) {
+                        document.getElementById('partnerMood').textContent = 
+                            `Su estado: ${getMoodEmoji(partnerMood.mood)}`;
+                    }
+                });
+            }
+        }
+    
+        function addGoal() {
+            const user = auth.currentUser;
+            if (user && document.getElementById('newGoal').value.trim()) {
+                const goalRef = database.ref('goals').push();
+                goalRef.set({
+                    text: document.getElementById('newGoal').value,
+                    createdBy: user.uid,
+                    timestamp: Date.now(),
+                    completed: false
+                });
+                document.getElementById('newGoal').value = '';
+            }
+        }
+    
+        // Listen to goals changes
+        function initializeGoalsListener() {
+            const user = auth.currentUser;
+            if (user) {
+                database.ref('goals').on('value', (snapshot) => {
+                    const goalsList = document.getElementById('goalsList');
+                    goalsList.innerHTML = '';
+                    snapshot.forEach((childSnapshot) => {
+                        const goal = childSnapshot.val();
+                        const goalItem = document.createElement('div');
+                        goalItem.className = 'goal-item';
+                        goalItem.innerHTML = `
+                            <span>${goal.text} ✨</span>
+                            <button onclick="completeGoal('${childSnapshot.key}')" 
+                                    style="margin-left: auto;">
+                                ${goal.completed ? '✓' : '○'}
+                            </button>
+                        `;
+                        goalsList.appendChild(goalItem);
+                    });
+                });
+            }
+        }
+    
+        // Add this to your auth state change listener
+        auth.onAuthStateChanged((user) => {
+            // ... existing code ...
+            if (user) {
+                initializeGoalsListener();
+                // Start listening to partner's mood
+                const partnerId = user.uid === 'user1Id' ? 'user2Id' : 'user1Id'; // Replace with actual partner ID
+                database.ref(`users/${partnerId}/mood`).on('value', (snapshot) => {
+                    const partnerMood = snapshot.val();
+                    if (partnerMood) {
+                        document.getElementById('partnerMood').textContent = 
+                            `Su estado: ${getMoodEmoji(partnerMood.mood)}`;
+                    }
+                });
+            }
+        });
+    
+        function getMoodEmoji(mood) {
+            const moods = {
+                'feliz': '😊',
+                'enamorado': '🥰',
+                'extrañando': '🥺',
+                'pensativo': '🤔'
+            };
+            return moods[mood] || '--';
+        }
+    
+        function addGoal() {
+            const input = document.getElementById('newGoal');
+            const goalsList = document.getElementById('goalsList');
+            if (input.value.trim()) {
+                const goalItem = document.createElement('div');
+                goalItem.className = 'goal-item';
+                goalItem.innerHTML = `
+                    <span>${input.value} ✨</span>
+                    <button onclick="this.parentElement.remove()" style="margin-left: auto;">✓</button>
+                `;
+                goalsList.appendChild(goalItem);
+                input.value = '';
+            }
+        }
+    
+        // Initialize features
+        generateQuote();
+        goals.forEach(goal => {
+            const goalsList = document.getElementById('goalsList');
+            const goalItem = document.createElement('div');
+            goalItem.className = 'goal-item';
+            goalItem.innerHTML = `
+                <span>${goal}</span>
+                <button onclick="this.parentElement.remove()" style="margin-left: auto;">✓</button>
+            `;
+            goalsList.appendChild(goalItem);
+        });
+    
+        // Check for special dates
+        function checkSpecialDates() {
+            const now = new Date();
+            const monthsary = new Date(startDate);
+            monthsary.setMonth(monthsary.getMonth() + Math.floor((now - startDate) / (30 * 24 * 60 * 60 * 1000)));
+            
+            if (now.getDate() === monthsary.getDate()) {
+                const months = Math.floor((now - startDate) / (30 * 24 * 60 * 60 * 1000));
+                const reminder = document.getElementById('anniversaryReminder');
+                reminder.style.display = 'block';
+                reminder.textContent = `¡Feliz ${months} meses juntos! 🎉💑`;
+            }
+        }
+    
+        checkSpecialDates();
+        setInterval(checkSpecialDates, 1000 * 60 * 60); // Check every hour
+    </script>
+
+    const loveMessages = [
+        "La distancia significa tan poco cuando alguien significa tanto 💕",
+        "Cada kilómetro nos hace más fuertes 💪",
+        "Mi corazón late más fuerte cuando pienso en ti 💓",
+        "La distancia es temporal, nuestro amor es eterno ✨",
+        "Eres mi persona favorita en todo el mundo 🌎",
+        "Cada día más cerca de estar juntos 🤗",
+        "Te extraño más con cada latido ❤️",
+        "Eres mi mejor decisión 💝"
+    ];
+
+    function showRandomLoveMessage() {
+        const randomMessage = loveMessages[Math.floor(Math.random() * loveMessages.length)];
+        alert(randomMessage);
+    }
+
+    // Initialize counters
+    updateCounters();
+    setInterval(updateCounters, 1000 * 60); // Update every minute
+</script>
