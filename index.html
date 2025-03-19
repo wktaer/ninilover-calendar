@@ -6,27 +6,7 @@
     <title>NiniLover 💖</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
-    <script type="module">
-        import { auth, onAuthStateChanged } from './js/firebase-init.js';
-
-        let currentUser = null;
-        const loginBtn = document.getElementById('loginBtn');
-
-        // Auth state observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loginBtn.textContent = 'Cerrar Sesión';
-                loginBtn.onclick = () => window.handleSignOut();
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-            } else {
-                currentUser = null;
-                loginBtn.textContent = 'Iniciar Sesión';
-                loginBtn.onclick = () => window.handleAuth();
-                document.getElementById('userInfo').textContent = '';
-            }
-        });
-    </script>
+    <script type="module" src="js/firebase-init.js"></script>
     <style>
         :root {
             --primary-color: #ff69b4;
@@ -185,45 +165,34 @@
     <div class="floating-hearts" id="hearts-container"></div>
     
     <header class="header">
-        <img src="https://i.gifer.com/7V0.gif" alt="Hello Kitty" class="logo">
+        <img src="https://i.pinimg.com/originals/3c/41/6d/3c416d31d5a256bf510a91cb2d0b0bb8.gif" alt="Hello Kitty" class="logo">
         <div class="clock" id="clock">00:00:00</div>
         <div id="userInfo"></div>
-        <button id="loginBtn">Iniciar Sesión</button>
+        <button id="loginBtn" onclick="handleAuth()">Iniciar Sesión</button>
     </header>
 
-    <div class="daily-message">
-        <h2>Mensaje del Día 💌</h2>
-        <p id="dailyMessage"></p>
-    </div>
-
-    <div class="menu-grid">
-        <div class="menu-item" onclick="location.href='calendar.html'">
-            <i class="fas fa-calendar-heart"></i>
-            <h3>Calendario</h3>
-        </div>
-        <div class="menu-item" onclick="location.href='memories.html'">
-            <i class="fas fa-images"></i>
-            <h3>Recuerdos</h3>
-        </div>
-        <div class="menu-item" onclick="location.href='letters.html'">
-            <i class="fas fa-envelope-heart"></i>
-            <h3>Cartas de Amor</h3>
-        </div>
-        <div class="menu-item">
-            <i class="fas fa-music"></i>
-            <h3>Nuestra Playlist</h3>
-        </div>
-        <div class="menu-item">
-            <i class="fas fa-star"></i>
-            <h3>Momentos Especiales</h3>
-        </div>
-        <div class="menu-item">
-            <i class="fas fa-comments-heart"></i>
-            <h3>Chat Lover</h3>
-        </div>
-    </div>
+    <main class="main-content">
+        <div class="daily-message" id="dailyMessage"></div>
+        
+        <nav class="navigation">
+            <a href="calendar.html" class="nav-item">
+                <i class="fas fa-calendar-heart"></i>
+                <span>Calendario</span>
+            </a>
+            <a href="memories.html" class="nav-item">
+                <i class="fas fa-camera-retro"></i>
+                <span>Recuerdos</span>
+            </a>
+            <a href="letters.html" class="nav-item">
+                <i class="fas fa-envelope-heart"></i>
+                <span>Cartas</span>
+            </a>
+        </nav>
+    </main>
 
     <script type="module">
+        import { auth, onAuthStateChanged } from './js/firebase-init.js';
+
         // Actualizar reloj
         function updateClock() {
             const now = new Date();
@@ -263,6 +232,20 @@
         }
 
         setInterval(createFloatingHearts, 300);
+
+        // Observar cambios en la autenticación
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            if (user) {
+                loginBtn.textContent = 'Cerrar Sesión';
+                loginBtn.onclick = () => handleSignOut();
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+            } else {
+                loginBtn.textContent = 'Iniciar Sesión';
+                loginBtn.onclick = () => handleAuth();
+                document.getElementById('userInfo').textContent = '';
+            }
+        });
     </script>
 </body>
 </html>

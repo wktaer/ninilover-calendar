@@ -8,6 +8,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'http
 const firebaseConfig = {
     apiKey: "AIzaSyBKHKFIxgvDvRJxBBIVUaJ7OFtFnAcxYZc",
     authDomain: "ninilover-calendar.firebaseapp.com",
+    databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
     messagingSenderId: "1063597046269",
@@ -20,9 +21,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
 const storage = getStorage(app);
-const provider = new GoogleAuthProvider();
 
-// Configurar el proveedor de Google
+// Configurar autenticación
+const provider = new GoogleAuthProvider();
 provider.setCustomParameters({
     prompt: 'select_account'
 });
@@ -51,11 +52,11 @@ async function handleSignOut() {
     }
 }
 
-// Hacer las funciones disponibles globalmente
+// Hacer las funciones disponibles globalmente de inmediato
 window.handleAuth = handleAuth;
 window.handleSignOut = handleSignOut;
 
-// Exportar funciones y objetos necesarios
+// Exportar todo lo necesario
 export { 
     auth,
     database,
