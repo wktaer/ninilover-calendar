@@ -359,47 +359,50 @@
             authDomain: "ninivibes-app.firebaseapp.com",
             databaseURL: "https://ninivibes-app-default-rtdb.firebaseio.com",
             projectId: "ninivibes-app",
-            storageBucket: "ninivibes-app.firebasestorage.app",
-            messagingSenderId: "1007612365941",
-            appId: "1:1007612365941:web:c2e1fe0b8868198b7e7c3c",
-            measurementId: "G-J8103W3JE0"
+            storageBucket: "ninivibes-app.appspot.com",
+            messagingSenderId: "654722868873",
+            appId: "1:654722868873:web:a7d4d0d05ba4f8a5c9fb68"
         };
 
-        // Inicializar Firebase con persistencia
+        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
-        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-            .then(() => {
-                console.log('Persistencia configurada correctamente');
-            })
-            .catch((error) => {
-                console.error('Error configurando persistencia:', error);
-            });
-
-        const database = firebase.database();
         const auth = firebase.auth();
+        const database = firebase.database();
         let currentUser = null;
 
-        // Configurar proveedor de Google con parámetros adicionales
-        const provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({
-            prompt: 'select_account'
+        // Función para manejar el inicio de sesión
+        function signIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    currentUser = result.user;
+                    document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
+                    document.getElementById('userInfo').textContent = `Hola, ${currentUser.displayName}`;
+                    renderCalendar();
+                })
+                .catch((error) => {
+                    console.error("Error de autenticación:", error);
+                    alert("Error al iniciar sesión: " + error.message);
+                });
+        }
+
+        // Escuchar cambios en el estado de autenticación
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('loginBtn').textContent = 'Cerrar Sesión';
+                document.getElementById('userInfo').textContent = `Hola, ${currentUser.displayName}`;
+                renderCalendar();
+            } else {
+                currentUser = null;
+                document.getElementById('loginBtn').textContent = 'Iniciar Sesión';
+                document.getElementById('userInfo').textContent = '';
+            }
         });
 
-        // Autenticación con redirección en lugar de popup
         document.getElementById('loginBtn').addEventListener('click', () => {
             if (!currentUser) {
-                auth.signInWithRedirect(provider)
-                    .then((result) => {
-                        console.log('Login exitoso:', result?.user?.displayName);
-                    })
-                    .catch((error) => {
-                        console.error('Error en login:', error);
-                        if (error.code === 'auth/operation-not-supported-in-this-environment') {
-                            alert('Por favor, abre este archivo usando un servidor web local o visita la versión en línea.');
-                        } else {
-                            alert('Error al iniciar sesión: ' + error.message);
-                        }
-                    });
+                signIn();
             } else {
                 auth.signOut()
                     .then(() => {
@@ -410,35 +413,6 @@
                     });
             }
         });
-
-        auth.onAuthStateChanged((user) => {
-            currentUser = user;
-            const loginBtn = document.getElementById('loginBtn');
-            const userInfo = document.getElementById('userInfo');
-            
-            if (user) {
-                console.log('Usuario autenticado:', user.displayName);
-                loginBtn.textContent = 'Cerrar Sesión';
-                userInfo.textContent = `Hola, ${user.displayName}`;
-            } else {
-                console.log('Usuario no autenticado');
-                loginBtn.textContent = 'Iniciar Sesión';
-                userInfo.textContent = '';
-            }
-            renderCalendar();
-        });
-
-        auth.getRedirectResult()
-            .then((result) => {
-                if (result.user) {
-                    console.log('Login exitoso:', result.user.displayName);
-                } else {
-                    console.log('Error en login:', result.error);
-                }
-            })
-            .catch((error) => {
-                console.error('Error en login:', error);
-            });
 
         let currentDate = new Date();
         let currentMonth = currentDate.getMonth();
@@ -604,7 +578,6 @@
 
         // Inicializar
         createHearts();
-        renderCalendar();
     </script>
 </body>
 </html>
