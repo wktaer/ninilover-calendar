@@ -6,8 +6,8 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'http
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
-    authDomain: "wktaer.github.io",  // Cambiado para usar GitHub Pages
+    apiKey: "AIzaSyBKHKFIxgvDvRJxBBIVUaJ7OFtFnAcxYZc",
+    authDomain: "ninilover-calendar.firebaseapp.com",
     databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
@@ -18,13 +18,19 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+auth.useDeviceLanguage(); // Usar el idioma del dispositivo
+
+// Configurar base de datos y almacenamiento
 const database = getDatabase(app);
 const storage = getStorage(app);
 
 // Configurar autenticación
 const provider = new GoogleAuthProvider();
+provider.addScope('profile');
+provider.addScope('email');
 provider.setCustomParameters({
-    prompt: 'select_account'
+    prompt: 'select_account',
+    login_hint: 'user@example.com'
 });
 
 // Función de autenticación
@@ -36,13 +42,26 @@ async function handleAuth() {
         return result.user;
     } catch (error) {
         console.error('Error de autenticación:', error);
-        if (error.code === 'auth/invalid-api-key') {
-            alert('Error de configuración de Firebase. Por favor, verifica que el dominio esté autorizado en la consola de Firebase.');
-        } else if (error.code === 'auth/unauthorized-domain') {
-            alert('Este dominio no está autorizado para usar Firebase Authentication. Por favor, agrega wktaer.github.io a los dominios autorizados en la consola de Firebase.');
-        } else {
-            alert('Error al iniciar sesión: ' + error.message);
+        
+        let errorMessage = 'Error al iniciar sesión';
+        switch (error.code) {
+            case 'auth/invalid-api-key':
+                errorMessage = 'Error de configuración de Firebase. Por favor, verifica la API key.';
+                break;
+            case 'auth/unauthorized-domain':
+                errorMessage = 'Este dominio no está autorizado. Por favor, agrega wktaer.github.io a los dominios autorizados en Firebase.';
+                break;
+            case 'auth/popup-blocked':
+                errorMessage = 'El navegador bloqueó la ventana emergente. Por favor, permite ventanas emergentes para este sitio.';
+                break;
+            case 'auth/cancelled-popup-request':
+                errorMessage = 'Operación cancelada. Por favor, intenta nuevamente.';
+                break;
+            default:
+                errorMessage = error.message;
         }
+        
+        alert(errorMessage);
         throw error;
     }
 }
