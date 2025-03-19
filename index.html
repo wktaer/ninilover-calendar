@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiniLover 💖</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK v10 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
+    
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <!-- Firebase Auth -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    
+    <script>
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
@@ -23,49 +25,49 @@
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
 
-        // Verificar si hay un resultado de redirección pendiente
-        getRedirectResult(auth)
+        // Función para manejar el inicio de sesión
+        window.handleAuth = () => {
+            console.log('Iniciando proceso de autenticación...');
+            auth.signInWithRedirect(provider)
+                .catch((error) => {
+                    console.error('Error de autenticación:', error);
+                    let errorMessage = 'Error al iniciar sesión: ' + error.message;
+                    if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage = 'Este dominio no está autorizado. Por favor, verifica la configuración en la consola de Firebase.';
+                    }
+                    alert(errorMessage);
+                });
+        };
+
+        // Función para manejar el cierre de sesión
+        window.handleSignOut = () => {
+            auth.signOut()
+                .then(() => {
+                    console.log('Usuario cerró sesión exitosamente');
+                })
+                .catch((error) => {
+                    console.error('Error al cerrar sesión:', error);
+                    alert('Error al cerrar sesión: ' + error.message);
+                });
+        };
+
+        // Verificar resultado de redirección
+        auth.getRedirectResult()
             .then((result) => {
-                if (result?.user) {
-                    console.log('Usuario autenticado por redirección:', result.user);
+                if (result.user) {
+                    console.log('Usuario autenticado:', result.user);
                 }
             })
             .catch((error) => {
                 console.error('Error en redirección:', error);
             });
 
-        // Función para manejar el inicio de sesión
-        window.handleAuth = async () => {
-            try {
-                console.log('Iniciando autenticación por redirección...');
-                await signInWithRedirect(auth, provider);
-            } catch (error) {
-                console.error('Error de autenticación:', error);
-                let errorMessage = 'Error al iniciar sesión: ' + error.message;
-                if (error.code === 'auth/unauthorized-domain') {
-                    errorMessage = 'Este dominio no está autorizado. Por favor, verifica la configuración en la consola de Firebase.';
-                }
-                alert(errorMessage);
-            }
-        };
-
-        // Función para manejar el cierre de sesión
-        window.handleSignOut = async () => {
-            try {
-                await signOut(auth);
-                console.log('Usuario cerró sesión exitosamente');
-            } catch (error) {
-                console.error('Error al cerrar sesión:', error);
-                alert('Error al cerrar sesión: ' + error.message);
-            }
-        };
-
         // Observar cambios en la autenticación
-        onAuthStateChanged(auth, (user) => {
+        auth.onAuthStateChanged((user) => {
             const loginBtn = document.getElementById('loginBtn');
             if (user) {
                 console.log('Usuario conectado:', {
@@ -74,12 +76,12 @@
                     uid: user.uid
                 });
                 loginBtn.textContent = 'Cerrar Sesión';
-                loginBtn.onclick = () => handleSignOut();
+                loginBtn.onclick = handleSignOut;
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
             } else {
                 console.log('Usuario no conectado');
                 loginBtn.textContent = 'Iniciar Sesión';
-                loginBtn.onclick = () => handleAuth();
+                loginBtn.onclick = handleAuth;
                 document.getElementById('userInfo').textContent = '';
             }
         });
