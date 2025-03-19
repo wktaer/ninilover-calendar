@@ -203,54 +203,60 @@
     </header>
 
     <div class="daily-message">
-        <h2>Mensaje del Día 💌</h2>
-        <p id="dailyMessage"></p>
+        <h2>Mensaje del Día</h2>
+        <p id="dailyMessage">Cargando mensaje...</p>
     </div>
 
     <div class="menu-grid">
-        <div class="menu-item" onclick="location.href='calendar.html'">
-            <i class="fas fa-calendar"></i>
+        <a href="calendar.html" class="menu-item">
+            <i class="fas fa-calendar-heart"></i>
             <h3>Calendario</h3>
-        </div>
-        <div class="menu-item" onclick="location.href='memories.html'">
-            <i class="fas fa-camera"></i>
+        </a>
+        <a href="memories.html" class="menu-item">
+            <i class="fas fa-heart"></i>
             <h3>Recuerdos</h3>
-        </div>
-        <div class="menu-item" onclick="location.href='letters.html'">
-            <i class="fas fa-envelope"></i>
-            <h3>Cartas de Amor</h3>
-        </div>
-        <div class="menu-item">
-            <i class="fas fa-music"></i>
-            <h3>Nuestra Playlist</h3>
-        </div>
-        <div class="menu-item">
-            <i class="fas fa-star"></i>
-            <h3>Momentos Especiales</h3>
-        </div>
-        <div class="menu-item">
-            <i class="fas fa-comments"></i>
-            <h3>Chat Lover</h3>
-        </div>
+        </a>
+        <a href="letters.html" class="menu-item">
+            <i class="fas fa-envelope-heart"></i>
+            <h3>Cartas</h3>
+        </a>
     </div>
 
-    <script type="module">
-        // Actualizar reloj
+    <script>
+        // Actualizar el reloj
         function updateClock() {
             const now = new Date();
-            const time = now.toLocaleTimeString();
-            document.getElementById('clock').textContent = time;
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('clock').textContent = timeString;
         }
         setInterval(updateClock, 1000);
         updateClock();
 
+        // Generar corazones flotantes
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = Math.random() * 100 + 'vw';
+            document.getElementById('hearts-container').appendChild(heart);
+            
+            heart.addEventListener('animationend', () => {
+                heart.remove();
+            });
+        }
+        setInterval(createHeart, 3000);
+
         // Mensajes diarios
         const messages = [
-            "Cada día te amo más y más 💖",
-            "Eres mi sol en días nublados ☀️",
-            "Contigo todo es más bonito 🌸",
-            "Mi corazón late por ti 💓",
-            "Eres mi amor eterno 💝"
+            "¡Cada día te quiero más! ",
+            "Eres mi persona favorita en todo el mundo ",
+            "Gracias por existir y estar en mi vida ",
+            "Contigo todo es mejor ",
+            "Tu sonrisa ilumina mi día ",
+            "Eres mi mayor bendición ",
+            "Juntos podemos con todo ",
+            "Mi corazón late por ti ",
+            "Eres mi amor eterno ",
+            "Contigo quiero envejecer "
         ];
 
         function updateDailyMessage() {
@@ -259,21 +265,6 @@
             document.getElementById('dailyMessage').textContent = messages[messageIndex];
         }
         updateDailyMessage();
-
-        // Corazones flotantes
-        function createFloatingHearts() {
-            const container = document.getElementById('hearts-container');
-            const heart = document.createElement('div');
-            heart.className = 'heart';
-            heart.style.left = Math.random() * 100 + 'vw';
-            container.appendChild(heart);
-            
-            setTimeout(() => {
-                heart.remove();
-            }, 4000);
-        }
-
-        setInterval(createFloatingHearts, 300);
     </script>
 </body>
 </html>
