@@ -6,7 +6,7 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-s
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzZyICYOaVdVmjWZwW9j0WOkk8aQvVX2SBEsN",
+    apiKey: "AIzaSyCYOaYnUxqjWzqwWj9edvkaqayCXs2BEsk",
     authDomain: "ninilover-app.firebaseapp.com",
     projectId: "ninilover-app",
     storageBucket: "ninilover-app.appspot.com",
@@ -48,6 +48,7 @@ async function handleAuth() {
             errorMessage = 'Error de red. Por favor verifica tu conexión';
         } else if (error.code === 'auth/api-key-not-valid') {
             errorMessage = 'Error de configuración. Por favor contacta al administrador.';
+            console.log("API Key utilizada:", firebaseConfig.apiKey);
         }
         
         alert(errorMessage);
