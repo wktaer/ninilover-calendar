@@ -8,7 +8,7 @@
     <!-- Firebase SDK v10 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -25,21 +25,35 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        
+        // Configurar el proveedor de Google
         const provider = new GoogleAuthProvider();
-
-        // Configuración adicional del proveedor
-        provider.addScope('profile');
-        provider.addScope('email');
         provider.setCustomParameters({
-            prompt: 'select_account'
+            'login_hint': 'user@example.com',
+            'prompt': 'select_account'
         });
 
         // Función para manejar el inicio de sesión
         window.handleAuth = async () => {
             try {
                 console.log('Iniciando proceso de autenticación...');
-                const result = await signInWithPopup(auth, provider);
-                console.log('Usuario autenticado:', result.user);
+                
+                // Configurar el auth para usar el dominio actual
+                auth.useDeviceLanguage();
+                auth.settings.appVerificationDisabledForTesting = true;
+                
+                const result = await signInWithPopup(auth, provider)
+                    .catch((error) => {
+                        if (error.code === 'auth/popup-blocked') {
+                            console.log('Intentando autenticación por redirección...');
+                            return signInWithRedirect(auth, provider);
+                        }
+                        throw error;
+                    });
+                
+                if (result?.user) {
+                    console.log('Usuario autenticado exitosamente:', result.user.displayName);
+                }
             } catch (error) {
                 console.error('Error detallado de autenticación:', {
                     code: error.code,
