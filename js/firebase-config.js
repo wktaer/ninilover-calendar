@@ -11,7 +11,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+    try {
+        firebase.initializeApp(firebaseConfig);
+    } catch (error) {
+        console.error("Error inicializando Firebase:", error);
+    }
 }
 
 const auth = firebase.auth();
@@ -21,8 +25,13 @@ const storage = firebase.storage();
 // Función común de autenticación
 function handleAuth() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(error => {
-        console.error('Error de autenticación:', error);
-        alert('Error al iniciar sesión: ' + error.message);
+    provider.setCustomParameters({
+        prompt: 'select_account'
     });
+    
+    auth.signInWithPopup(provider)
+        .catch(error => {
+            console.error('Error de autenticación:', error);
+            alert('Error al iniciar sesión: ' + error.message);
+        });
 }
