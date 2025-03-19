@@ -313,12 +313,27 @@
                 renderCalendar();
             } else {
                 currentUser = null;
-                document.getElementById('userInfo').textContent = 'Por favor inicia sesión en la página principal';
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+                document.getElementById('userInfo').innerHTML = `
+                    <p>Por favor inicia sesión para ver el calendario 💝</p>
+                    <button onclick="handleAuth()" style="
+                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        font-weight: 600;
+                    ">Iniciar Sesión</button>
+                `;
             }
         });
+
+        // Función de autenticación
+        function handleAuth() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        }
 
         function renderCalendar() {
             const firstDay = new Date(currentYear, currentMonth, 1);
