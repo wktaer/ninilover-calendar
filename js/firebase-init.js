@@ -6,14 +6,13 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'http
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBKHKFIxgvDvRJxBBIVUaJ7OFtFnAcxYZc",
+    apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
     authDomain: "ninilover-calendar.firebaseapp.com",
     databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
     messagingSenderId: "1063597046269",
-    appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f",
-    measurementId: "G-XXXXXXXXXX"
+    appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f"
 };
 
 // Initialize Firebase
@@ -31,12 +30,17 @@ provider.setCustomParameters({
 // Función de autenticación
 async function handleAuth() {
     try {
+        console.log("Iniciando autenticación...");
         const result = await signInWithPopup(auth, provider);
         console.log("Autenticación exitosa:", result.user.displayName);
         return result.user;
     } catch (error) {
         console.error('Error de autenticación:', error);
-        alert('Error al iniciar sesión: ' + error.message);
+        if (error.code === 'auth/invalid-api-key') {
+            alert('Error de configuración de Firebase. Por favor, verifica que el dominio esté autorizado en la consola de Firebase.');
+        } else {
+            alert('Error al iniciar sesión: ' + error.message);
+        }
         throw error;
     }
 }
@@ -52,7 +56,7 @@ async function handleSignOut() {
     }
 }
 
-// Hacer las funciones disponibles globalmente de inmediato
+// Hacer las funciones disponibles globalmente
 window.handleAuth = handleAuth;
 window.handleSignOut = handleSignOut;
 
