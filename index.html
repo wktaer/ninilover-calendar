@@ -714,19 +714,7 @@
     </div>
 </div>
 
-<!-- Add before closing body tag -->
-<div class="anniversary-reminder" id="anniversaryReminder"></div>
 
-
-    <div class="next-meeting">
-        <h2>Próximo Encuentro 🥰</h2>
-        <div id="nextMeetingCounter">Calculando...</div>
-    </div>
-
-    <!-- Add this before closing body tag -->
-    <div class="floating-message" onclick="showRandomLoveMessage()">
-        💌 Click para un mensaje especial
-    </div>
 
     <script>
         // Add to your existing script section
@@ -887,23 +875,5 @@
         setInterval(checkSpecialDates, 1000 * 60 * 60); // Check every hour
     </script>
 
-    const loveMessages = [
-        "La distancia significa tan poco cuando alguien significa tanto 💕",
-        "Cada kilómetro nos hace más fuertes 💪",
-        "Mi corazón late más fuerte cuando pienso en ti 💓",
-        "La distancia es temporal, nuestro amor es eterno ✨",
-        "Eres mi persona favorita en todo el mundo 🌎",
-        "Cada día más cerca de estar juntos 🤗",
-        "Te extraño más con cada latido ❤️",
-        "Eres mi mejor decisión 💝"
-    ];
-
-    function showRandomLoveMessage() {
-        const randomMessage = loveMessages[Math.floor(Math.random() * loveMessages.length)];
-        alert(randomMessage);
-    }
-
-    // Initialize counters
-    updateCounters();
-    setInterval(updateCounters, 1000 * 60); // Update every minute
+  
 </script>
