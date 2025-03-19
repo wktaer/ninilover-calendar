@@ -6,7 +6,27 @@
     <title>NiniLover 💖</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
-    <script type="module" src="js/firebase-init.js"></script>
+    <script type="module">
+        import { auth, onAuthStateChanged, handleAuth, handleSignOut } from './js/firebase-init.js';
+
+        // Hacer las funciones disponibles globalmente
+        window.handleAuth = handleAuth;
+        window.handleSignOut = handleSignOut;
+
+        // Observar cambios en la autenticación
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            if (user) {
+                loginBtn.textContent = 'Cerrar Sesión';
+                loginBtn.onclick = handleSignOut;
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+            } else {
+                loginBtn.textContent = 'Iniciar Sesión';
+                loginBtn.onclick = handleAuth;
+                document.getElementById('userInfo').textContent = '';
+            }
+        });
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -179,7 +199,7 @@
         <img src="https://i.pinimg.com/originals/3c/41/6d/3c416d31d5a256bf510a91cb2d0b0bb8.gif" alt="Hello Kitty" class="logo">
         <div class="clock" id="clock">00:00:00</div>
         <div id="userInfo"></div>
-        <button id="loginBtn" onclick="handleAuth()">Iniciar Sesión</button>
+        <button id="loginBtn">Iniciar Sesión</button>
     </header>
 
     <div class="daily-message">
@@ -215,8 +235,6 @@
     </div>
 
     <script type="module">
-        import { auth, onAuthStateChanged } from './js/firebase-init.js';
-
         // Actualizar reloj
         function updateClock() {
             const now = new Date();
@@ -256,20 +274,6 @@
         }
 
         setInterval(createFloatingHearts, 300);
-
-        // Observar cambios en la autenticación
-        onAuthStateChanged(auth, (user) => {
-            const loginBtn = document.getElementById('loginBtn');
-            if (user) {
-                loginBtn.textContent = 'Cerrar Sesión';
-                loginBtn.onclick = () => handleSignOut();
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-            } else {
-                loginBtn.textContent = 'Iniciar Sesión';
-                loginBtn.onclick = () => handleAuth();
-                document.getElementById('userInfo').textContent = '';
-            }
-        });
     </script>
 </body>
 </html>
