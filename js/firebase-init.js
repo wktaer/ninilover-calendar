@@ -7,7 +7,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'http
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyC1wJMB11qR4wFdzrWCV0-eGYq6D9OCcVc",
-    authDomain: "ninilover-calendar.firebaseapp.com",
+    authDomain: "wktaer.github.io",  // Cambiado para usar GitHub Pages
     databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
@@ -38,6 +38,8 @@ async function handleAuth() {
         console.error('Error de autenticación:', error);
         if (error.code === 'auth/invalid-api-key') {
             alert('Error de configuración de Firebase. Por favor, verifica que el dominio esté autorizado en la consola de Firebase.');
+        } else if (error.code === 'auth/unauthorized-domain') {
+            alert('Este dominio no está autorizado para usar Firebase Authentication. Por favor, agrega wktaer.github.io a los dominios autorizados en la consola de Firebase.');
         } else {
             alert('Error al iniciar sesión: ' + error.message);
         }
