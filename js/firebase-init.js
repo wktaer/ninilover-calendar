@@ -1,3 +1,4 @@
+// Firebase App (the core Firebase SDK) is always required and must be listed first
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getDatabase, ref, set, get, push, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
@@ -19,15 +20,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
 const storage = getStorage(app);
+const provider = new GoogleAuthProvider();
 
-// Función común de autenticación
-window.handleAuth = async () => {
+// Configurar el proveedor de Google
+provider.setCustomParameters({
+    prompt: 'select_account'
+});
+
+// Función de autenticación
+async function handleAuth() {
     try {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({
-            prompt: 'select_account'
-        });
-        
         const result = await signInWithPopup(auth, provider);
         console.log("Autenticación exitosa:", result.user.displayName);
         return result.user;
@@ -36,10 +38,10 @@ window.handleAuth = async () => {
         alert('Error al iniciar sesión: ' + error.message);
         throw error;
     }
-};
+}
 
 // Función para cerrar sesión
-window.handleSignOut = async () => {
+async function handleSignOut() {
     try {
         await auth.signOut();
         console.log("Sesión cerrada exitosamente");
@@ -47,7 +49,11 @@ window.handleSignOut = async () => {
         console.error('Error al cerrar sesión:', error);
         alert('Error al cerrar sesión: ' + error.message);
     }
-};
+}
+
+// Hacer las funciones disponibles globalmente
+window.handleAuth = handleAuth;
+window.handleSignOut = handleSignOut;
 
 // Exportar funciones y objetos necesarios
 export { 
@@ -62,5 +68,7 @@ export {
     storageRef,
     uploadBytes,
     getDownloadURL,
-    onAuthStateChanged
+    onAuthStateChanged,
+    handleAuth,
+    handleSignOut
 };

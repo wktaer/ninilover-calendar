@@ -6,8 +6,27 @@
     <title>NiniLover 💖</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK v10 -->
-    <script type="module" src="js/firebase-init.js"></script>
-    
+    <script type="module">
+        import { auth, onAuthStateChanged } from './js/firebase-init.js';
+
+        let currentUser = null;
+        const loginBtn = document.getElementById('loginBtn');
+
+        // Auth state observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loginBtn.textContent = 'Cerrar Sesión';
+                loginBtn.onclick = () => window.handleSignOut();
+                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
+            } else {
+                currentUser = null;
+                loginBtn.textContent = 'Iniciar Sesión';
+                loginBtn.onclick = () => window.handleAuth();
+                document.getElementById('userInfo').textContent = '';
+            }
+        });
+    </script>
     <style>
         :root {
             --primary-color: #ff69b4;
@@ -166,7 +185,7 @@
     <div class="floating-hearts" id="hearts-container"></div>
     
     <header class="header">
-        <img src="https://clipart-library.com/images/8TxrBGEac.png" alt="Hello Kitty" class="logo">
+        <img src="https://i.gifer.com/7V0.gif" alt="Hello Kitty" class="logo">
         <div class="clock" id="clock">00:00:00</div>
         <div id="userInfo"></div>
         <button id="loginBtn">Iniciar Sesión</button>
@@ -205,11 +224,6 @@
     </div>
 
     <script type="module">
-        import { auth, onAuthStateChanged } from './js/firebase-init.js';
-
-        let currentUser = null;
-        const loginBtn = document.getElementById('loginBtn');
-
         // Actualizar reloj
         function updateClock() {
             const now = new Date();
@@ -234,21 +248,6 @@
             document.getElementById('dailyMessage').textContent = messages[messageIndex];
         }
         updateDailyMessage();
-
-        // Auth state observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loginBtn.textContent = 'Cerrar Sesión';
-                loginBtn.onclick = () => window.handleSignOut();
-                document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
-            } else {
-                currentUser = null;
-                loginBtn.textContent = 'Iniciar Sesión';
-                loginBtn.onclick = () => window.handleAuth();
-                document.getElementById('userInfo').textContent = '';
-            }
-        });
 
         // Corazones flotantes
         function createFloatingHearts() {
