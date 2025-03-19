@@ -6,13 +6,14 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-s
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBKHKFIxgvDvRJxBBIVUaJ7OFtFnAcxYZc",
-    authDomain: "ninilover-calendar.firebaseapp.com",
+    apiKey: "AIzZyICYOaVdVmjWZwW9j0WOkk8aQvVX2SBEsN",
+    authDomain: "ninilover-app.firebaseapp.com",
     projectId: "ninilover-calendar",
     storageBucket: "ninilover-calendar.appspot.com",
-    messagingSenderId: "1063597046269",
-    appId: "1:1063597046269:web:cf3706e14381f6ca5d3c8f",
-    databaseURL: "https://ninilover-calendar-default-rtdb.firebaseio.com"
+    messagingSenderId: "1067612365943",
+    appId: "1:1067612365943:web:52cefbd8a8691987e7c3e",
+    measurementId: "G-JR18EWKJFB",
+    databaseURL: "https://ninilover-app-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
