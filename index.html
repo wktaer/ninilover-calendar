@@ -8,7 +8,7 @@
     <!-- Firebase SDK v10 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -25,62 +25,30 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        
-        // Configurar el proveedor de Google
         const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({
-            'login_hint': 'user@example.com',
-            'prompt': 'select_account'
-        });
+
+        // Verificar si hay un resultado de redirección pendiente
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result?.user) {
+                    console.log('Usuario autenticado por redirección:', result.user);
+                }
+            })
+            .catch((error) => {
+                console.error('Error en redirección:', error);
+            });
 
         // Función para manejar el inicio de sesión
         window.handleAuth = async () => {
             try {
-                console.log('Iniciando proceso de autenticación...');
-                
-                // Configurar el auth para usar el dominio actual
-                auth.useDeviceLanguage();
-                auth.settings.appVerificationDisabledForTesting = true;
-                
-                const result = await signInWithPopup(auth, provider)
-                    .catch((error) => {
-                        if (error.code === 'auth/popup-blocked') {
-                            console.log('Intentando autenticación por redirección...');
-                            return signInWithRedirect(auth, provider);
-                        }
-                        throw error;
-                    });
-                
-                if (result?.user) {
-                    console.log('Usuario autenticado exitosamente:', result.user.displayName);
-                }
+                console.log('Iniciando autenticación por redirección...');
+                await signInWithRedirect(auth, provider);
             } catch (error) {
-                console.error('Error detallado de autenticación:', {
-                    code: error.code,
-                    message: error.message,
-                    email: error.email,
-                    credential: error.credential
-                });
-                
-                let errorMessage = 'Error al iniciar sesión: ';
-                
-                switch (error.code) {
-                    case 'auth/popup-blocked':
-                        errorMessage += 'El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.';
-                        break;
-                    case 'auth/popup-closed-by-user':
-                        errorMessage += 'La ventana de inicio de sesión fue cerrada antes de completar el proceso.';
-                        break;
-                    case 'auth/unauthorized-domain':
-                        errorMessage += 'Este dominio no está autorizado para realizar operaciones de autenticación. Por favor, contacta al administrador.';
-                        break;
-                    case 'auth/operation-not-allowed':
-                        errorMessage += 'El inicio de sesión con Google no está habilitado. Por favor, contacta al administrador.';
-                        break;
-                    default:
-                        errorMessage += error.message;
+                console.error('Error de autenticación:', error);
+                let errorMessage = 'Error al iniciar sesión: ' + error.message;
+                if (error.code === 'auth/unauthorized-domain') {
+                    errorMessage = 'Este dominio no está autorizado. Por favor, verifica la configuración en la consola de Firebase.';
                 }
-                
                 alert(errorMessage);
             }
         };
@@ -100,7 +68,7 @@
         onAuthStateChanged(auth, (user) => {
             const loginBtn = document.getElementById('loginBtn');
             if (user) {
-                console.log('Estado de autenticación: Usuario conectado', {
+                console.log('Usuario conectado:', {
                     displayName: user.displayName,
                     email: user.email,
                     uid: user.uid
@@ -109,7 +77,7 @@
                 loginBtn.onclick = () => handleSignOut();
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.displayName}! 💖`;
             } else {
-                console.log('Estado de autenticación: Usuario no conectado');
+                console.log('Usuario no conectado');
                 loginBtn.textContent = 'Iniciar Sesión';
                 loginBtn.onclick = () => handleAuth();
                 document.getElementById('userInfo').textContent = '';
