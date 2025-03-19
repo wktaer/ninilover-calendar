@@ -118,13 +118,43 @@
         };
 
         // Observar cambios en la autenticación
+        // Add after Firebase initialization
+        const connectCouple = async (user) => {
+            const userRef = database.ref(`users/${user.uid}`);
+            const coupleRef = database.ref('couples');
+            
+            // Check if user is already in a couple
+            const coupleSnapshot = await coupleRef.orderByChild('members/' + user.uid).equalTo(true).once('value');
+            
+            if (!coupleSnapshot.exists()) {
+                // Create or join couple
+                const newCoupleRef = coupleRef.push();
+                await newCoupleRef.set({
+                    members: {
+                        [user.uid]: true
+                    },
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // Update user's couple reference
+                await userRef.update({
+                    coupleId: newCoupleRef.key
+                });
+            }
+        };
+        
+        // Modify the auth state change listener
         auth.onAuthStateChanged((user) => {
             const loginBtn = document.getElementById('loginBtn');
             if (user) {
                 console.log('Usuario conectado:', user.email);
+                connectCouple(user);  // Add this line
                 loginBtn.textContent = 'Cerrar Sesión';
                 loginBtn.onclick = handleSignOut;
                 document.getElementById('userInfo').textContent = `¡Hola, ${user.email}! 💖`;
+                
+                // Initialize all real-time listeners
+                initializeFeatures(user);
             } else {
                 console.log('Usuario no conectado');
                 loginBtn.textContent = 'Iniciar Sesión';
@@ -714,7 +744,19 @@
     </div>
 </div>
 
+<!-- Add before closing body tag -->
+<div class="anniversary-reminder" id="anniversaryReminder"></div>
 
+
+    <div class="next-meeting">
+        <h2>Próximo Encuentro 🥰</h2>
+        <div id="nextMeetingCounter">Calculando...</div>
+    </div>
+
+    <!-- Add this before closing body tag -->
+    <div class="floating-message" onclick="showRandomLoveMessage()">
+        💌 Click para un mensaje especial
+    </div>
 
     <script>
         // Add to your existing script section
@@ -742,25 +784,15 @@
             quoteDisplay.textContent = randomQuote;
         }
     
+        // Modify the updateMood function
         function updateMood(mood) {
             const user = auth.currentUser;
             if (user) {
-                // Update mood in Firebase
                 database.ref(`users/${user.uid}/mood`).set({
                     mood: mood,
-                    timestamp: Date.now()
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
                 document.getElementById('currentMood').textContent = `Tu estado: ${getMoodEmoji(mood)}`;
-                
-                // Listen to partner's mood changes
-                const partnerId = user.uid === 'user1Id' ? 'user2Id' : 'user1Id'; // Replace with actual partner ID
-                database.ref(`users/${partnerId}/mood`).on('value', (snapshot) => {
-                    const partnerMood = snapshot.val();
-                    if (partnerMood) {
-                        document.getElementById('partnerMood').textContent = 
-                            `Su estado: ${getMoodEmoji(partnerMood.mood)}`;
-                    }
-                });
             }
         }
     
@@ -875,5 +907,23 @@
         setInterval(checkSpecialDates, 1000 * 60 * 60); // Check every hour
     </script>
 
-  
+    const loveMessages = [
+        "La distancia significa tan poco cuando alguien significa tanto 💕",
+        "Cada kilómetro nos hace más fuertes 💪",
+        "Mi corazón late más fuerte cuando pienso en ti 💓",
+        "La distancia es temporal, nuestro amor es eterno ✨",
+        "Eres mi persona favorita en todo el mundo 🌎",
+        "Cada día más cerca de estar juntos 🤗",
+        "Te extraño más con cada latido ❤️",
+        "Eres mi mejor decisión 💝"
+    ];
+
+    function showRandomLoveMessage() {
+        const randomMessage = loveMessages[Math.floor(Math.random() * loveMessages.length)];
+        alert(randomMessage);
+    }
+
+    // Initialize counters
+    updateCounters();
+    setInterval(updateCounters, 1000 * 60); // Update every minute
 </script>
